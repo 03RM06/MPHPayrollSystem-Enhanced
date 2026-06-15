@@ -3,16 +3,16 @@ MPHPayrollSystem
 A Java-based Payroll Management System developed using NetBeans IDE and Maven.
 This system manages employee records, attendance, leave requests, and payroll computation with role-based access control.
 
-📌 Features
-👨‍💼 Employee Management (Create, View, Update)
-⏱️ Attendance Tracking
-📝 Leave Management System
-💰 Payroll Computation
-📊 Payslip Generation
-🔐 Role-Based Access Control (Admin / Employee)
-🔒 Secure password handling (BCrypt)
-🧮 Salary deductions and tax computation
-🏗️ Project Structure
+Features
+Employee Management (Create, View, Update)
+Attendance Tracking
+Leave Management System
+Payroll Computation
+Payslip Generation
+Role-Based Access Control (Admin / Employee)
+Secure password handling (BCrypt)
+Salary deductions and tax computation
+Project Structure
 src/main/java/
 │
 ├── DAO/              # Database Access Layer
@@ -28,7 +28,7 @@ Maven
 MySQL (assumed backend database)
 Swing UI
 BCrypt (security hashing)
-🚀 How to Run the Project
+How to Run the Project
 
 Clone the repository:
 
@@ -42,9 +42,6 @@ mvn clean install
 Run the main class:
 
 MPHPayrollSystem.java
-📷 Screenshots (Optional)
-
-You can add screenshots here of:
 
 Login Page
 Admin Dashboard
