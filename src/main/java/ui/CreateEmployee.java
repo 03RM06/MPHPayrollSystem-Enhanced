@@ -1,5 +1,5 @@
 package ui;
- 
+
 import DAO.EmployeeDAO;
 import Model.Employee;
 import Model.Role;
@@ -13,75 +13,238 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.logging.Level;
 import javax.swing.JOptionPane;
- 
+import javax.swing.text.AbstractDocument;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DocumentFilter;
+
 public class CreateEmployee extends javax.swing.JFrame {
- 
+
     private static final java.util.logging.Logger logger =
             java.util.logging.Logger.getLogger(CreateEmployee.class.getName());
- 
-    // ── injected state ────────────────────────────────────────────────────
+
     private final UserAccount        currentUser;
     private final javax.swing.JFrame parentFrame;
- 
-    // ── DAO ───────────────────────────────────────────────────────────────
     private final EmployeeDAO employeeDAO = new EmployeeDAO();
- 
+
     // ─────────────────────────────────────────────────────────────────────
     //  Constructors
     // ─────────────────────────────────────────────────────────────────────
- 
-    /**
-     * Primary constructor — called from ViewEmployee "Manage Employee" button.
-     * Only HR role should reach this page.
-     */
+
     public CreateEmployee(UserAccount user, javax.swing.JFrame parent) {
         this.currentUser = user;
         this.parentFrame = parent;
         initComponents();
         setLocationRelativeTo(null);
         setTitle("MotorPH — Create Employee");
+        jComboBoxLeaveType_placeholder();
         autoGenerateEmployeeId();
+        applyInputFilters();
     }
- 
-    /** No-arg constructor — NetBeans Form Editor only. */
+
+    public CreateEmployee(UserAccount user, javax.swing.JFrame parent, Employee emp) {
+        this.currentUser = user;
+        this.parentFrame = parent;
+        initComponents();
+        setLocationRelativeTo(null);
+        setTitle("MotorPH — Edit Employee");
+        applyInputFilters();
+        populateFields(emp);
+    }
+
     public CreateEmployee() {
         this.currentUser = null;
         this.parentFrame = null;
         initComponents();
     }
- 
+
     // ─────────────────────────────────────────────────────────────────────
     //  Auto-generate Employee ID
     // ─────────────────────────────────────────────────────────────────────
- 
-    /**
-     * Generates a simple unique employee ID and pre-fills the field.
-     * Format: EMP + last 5 digits of current timestamp.
-     */
+
     private void autoGenerateEmployeeId() {
-        String generated = "EMP" + (System.currentTimeMillis() % 100000);
-        jTextFieldEmpNum1.setText(generated);
+        try {
+        String sql = "SELECT MAX(CAST(employee_id AS UNSIGNED)) FROM employee";
+        try (java.sql.Connection conn = DAO.Database.getInstance().getConnection();
+             java.sql.PreparedStatement ps = conn.prepareStatement(sql);
+             java.sql.ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                int lastId = rs.getInt(1);
+                jTextFieldEmpNum1.setText(String.valueOf(lastId + 1));
+            } else {
+                jTextFieldEmpNum1.setText("10034");
+            }
+        }
+    } catch (SQLException ex) {
+        logger.log(Level.WARNING, "Could not fetch last employee ID", ex);
+        jTextFieldEmpNum1.setText("10034"); // fallback
     }
- 
+    }
+
     // ─────────────────────────────────────────────────────────────────────
-    //  Validation helpers
+    //  Populate fields for Edit mode
     // ─────────────────────────────────────────────────────────────────────
- 
-    /**
-     * Runs all field validations in order.
-     * Returns false and shows a specific dialog on the first failure.
-     */
+
+    private void populateFields(Employee emp) {
+        jTextFieldEmpNum1.setText(emp.getEmployeeId());
+        jTextFieldEmpNum1.setEditable(false); // Don't allow ID change in edit mode
+        jTextFieldFirstName.setText(emp.getFirstName());
+        jTextFieldLastName.setText(emp.getLastName());
+        jTextFieldAddress.setText(emp.getAddress());
+        jTextFieldPhoneNum.setText(emp.getPhoneNumber() != null
+                ? emp.getPhoneNumber().replaceAll("[^0-9]", "") : "");
+        jTextFieldSSSNum.setText(emp.getSssNumber() != null
+                ? emp.getSssNumber().replaceAll("[^0-9]", "") : "");
+        jTextFieldPhilHealthNum.setText(emp.getPhilhealthNumber() != null
+                ? emp.getPhilhealthNumber().replaceAll("[^0-9]", "") : "");
+        jTextFieldTINNum.setText(emp.getTinNumber() != null
+                ? emp.getTinNumber().replaceAll("[^0-9]", "") : "");
+        jTextFieldPagibigNum.setText(emp.getPagIbigNumber() != null
+                ? emp.getPagIbigNumber().replaceAll("[^0-9]", "") : "");
+        jTextFieldBasicSalary.setText(emp.getBasicSalary() != null
+                ? emp.getBasicSalary().toPlainString() : "");
+        jTextFieldRiceSubsidy.setText(emp.getRiceSubsidy() != null
+                ? emp.getRiceSubsidy().toPlainString() : "");
+        jTextFieldPhoneAllowance.setText(emp.getPhoneAllowance() != null
+                ? emp.getPhoneAllowance().toPlainString() : "");
+        jTextFieldClothingAllowance.setText(emp.getClothingAllowance() != null
+                ? emp.getClothingAllowance().toPlainString() : "");
+        jTextFieldGrossSemiMonthly.setText(emp.getGrossSemiMonthlyRate() != null
+                ? emp.getGrossSemiMonthlyRate().toPlainString() : "");
+        jTextFieldHourlyRate.setText(emp.getHourlyRate() != null
+                ? emp.getHourlyRate().toPlainString() : "");
+
+        if (emp.getStatus() != null) {
+            String statusStr = emp.getStatus().name().substring(0, 1).toUpperCase()
+                    + emp.getStatus().name().substring(1).toLowerCase();
+            jComboBoxStatus.setSelectedItem(statusStr);
+        }
+        if (emp.getPosition() != null) {
+            jComboBoxPosition.setSelectedItem(emp.getPosition());
+        }
+        if (emp.getImmediateSupervisor() != null && !emp.getImmediateSupervisor().isEmpty()) {
+            jComboBoxSupervisor.setSelectedItem(emp.getImmediateSupervisor());
+        }
+        if (emp.getBirthday() != null) {
+            java.util.Date date = java.util.Date.from(
+                emp.getBirthday().atStartOfDay(java.time.ZoneId.systemDefault()).toInstant());
+            jCalendarBirthday.setDate(date);
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    //  Input Filters
+    // ─────────────────────────────────────────────────────────────────────
+
+    private void applyInputFilters() {
+        addDigitOnlyFilter(jTextFieldPhoneNum, 11);
+        addDigitOnlyFilter(jTextFieldSSSNum, 10);
+        addDigitOnlyFilter(jTextFieldPhilHealthNum, 12);
+        addDigitOnlyFilter(jTextFieldTINNum, 12);
+        addDigitOnlyFilter(jTextFieldPagibigNum, 12);
+        addDecimalOnlyFilter(jTextFieldBasicSalary);
+        addDecimalOnlyFilter(jTextFieldRiceSubsidy);
+        addDecimalOnlyFilter(jTextFieldPhoneAllowance);
+        addDecimalOnlyFilter(jTextFieldClothingAllowance);
+        addDecimalOnlyFilter(jTextFieldGrossSemiMonthly);
+        addDecimalOnlyFilter(jTextFieldHourlyRate);
+    }
+
+    private void addDigitOnlyFilter(javax.swing.JTextField field, int maxLength) {
+        ((AbstractDocument) field.getDocument()).setDocumentFilter(new DocumentFilter() {
+            @Override
+            public void insertString(FilterBypass fb, int offset, String string,
+                    AttributeSet attr) throws BadLocationException {
+                if (string == null) return;
+                String filtered = string.replaceAll("[^0-9]", "");
+                if (filtered.isEmpty() && !string.isEmpty()) {
+                    showWarn("Only numbers are allowed in this field.");
+                    return;
+                }
+                if (fb.getDocument().getLength() + filtered.length() > maxLength) {
+                    showWarn("Maximum " + maxLength + " digits allowed.");
+                    return;
+                }
+                super.insertString(fb, offset, filtered, attr);
+            }
+
+            @Override
+            public void replace(FilterBypass fb, int offset, int length, String string,
+                    AttributeSet attr) throws BadLocationException {
+                if (string == null) return;
+                String filtered = string.replaceAll("[^0-9]", "");
+                if (filtered.isEmpty() && !string.isEmpty()) {
+                    showWarn("Only numbers are allowed in this field.");
+                    return;
+                }
+                if (fb.getDocument().getLength() - length + filtered.length() > maxLength) {
+                    showWarn("Maximum " + maxLength + " digits allowed.");
+                    return;
+                }
+                super.replace(fb, offset, length, filtered, attr);
+            }
+        });
+    }
+
+    private void addDecimalOnlyFilter(javax.swing.JTextField field) {
+        ((AbstractDocument) field.getDocument()).setDocumentFilter(new DocumentFilter() {
+            @Override
+            public void insertString(FilterBypass fb, int offset, String string,
+                    AttributeSet attr) throws BadLocationException {
+                if (string == null) return;
+                String filtered = string.replaceAll("[^0-9.]", "");
+                if (filtered.isEmpty() && !string.isEmpty()) {
+                    showWarn("Only numbers and decimal point are allowed for peso amounts.");
+                    return;
+                }
+                String current = fb.getDocument().getText(0, fb.getDocument().getLength());
+                if (filtered.contains(".") && current.contains(".")) {
+                    showWarn("Only one decimal point is allowed.");
+                    return;
+                }
+                super.insertString(fb, offset, filtered, attr);
+            }
+
+            @Override
+            public void replace(FilterBypass fb, int offset, int length, String string,
+                    AttributeSet attr) throws BadLocationException {
+                if (string == null) return;
+                String filtered = string.replaceAll("[^0-9.]", "");
+                if (filtered.isEmpty() && !string.isEmpty()) {
+                    showWarn("Only numbers and decimal point are allowed for peso amounts.");
+                    return;
+                }
+                String current = fb.getDocument().getText(0, fb.getDocument().getLength());
+                if (filtered.contains(".") && current.contains(".")) {
+                    showWarn("Only one decimal point is allowed.");
+                    return;
+                }
+                super.replace(fb, offset, length, filtered, attr);
+            }
+        });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    //  Placeholder — not used but avoids compile errors
+    // ─────────────────────────────────────────────────────────────────────
+
+    private void jComboBoxLeaveType_placeholder() {
+        // intentionally empty
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    //  Validation
+    // ─────────────────────────────────────────────────────────────────────
+
     private boolean validateAllFields() {
- 
-        // ── Employee Number ───────────────────────────────────────────
+
         String empId = jTextFieldEmpNum1.getText().trim();
         if (empId.isEmpty()) {
             showWarn("Employee Number is required.");
             jTextFieldEmpNum1.requestFocus();
             return false;
         }
- 
-        // ── First Name ────────────────────────────────────────────────
+
         String firstName = jTextFieldFirstName.getText().trim();
         if (firstName.isEmpty()) {
             showWarn("First Name is required.");
@@ -89,12 +252,11 @@ public class CreateEmployee extends javax.swing.JFrame {
             return false;
         }
         if (!firstName.matches("^[a-zA-Z\\s.'-]+$")) {
-            showWarn("First Name must contain letters only (no numbers or special characters).");
+            showWarn("First Name must contain letters only.");
             jTextFieldFirstName.requestFocus();
             return false;
         }
- 
-        // ── Last Name ─────────────────────────────────────────────────
+
         String lastName = jTextFieldLastName.getText().trim();
         if (lastName.isEmpty()) {
             showWarn("Last Name is required.");
@@ -102,68 +264,64 @@ public class CreateEmployee extends javax.swing.JFrame {
             return false;
         }
         if (!lastName.matches("^[a-zA-Z\\s.'-]+$")) {
-            showWarn("Last Name must contain letters only (no numbers or special characters).");
+            showWarn("Last Name must contain letters only.");
             jTextFieldLastName.requestFocus();
             return false;
         }
- 
-        // ── Birthday ──────────────────────────────────────────────────
+
         Date birthday = jCalendarBirthday.getDate();
         if (birthday == null) {
             showWarn("Birthday is required. Please select a date from the calendar.");
             return false;
         }
-        // Must be at least 18 years old
         LocalDate bday = birthday.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         if (bday.isAfter(LocalDate.now().minusYears(18))) {
             showWarn("Employee must be at least 18 years old.");
             return false;
         }
- 
-        // ── Address ───────────────────────────────────────────────────
+
         String address = jTextFieldAddress.getText().trim();
         if (address.isEmpty()) {
             showWarn("Address is required.");
             jTextFieldAddress.requestFocus();
             return false;
         }
- 
-        // ── Phone Number ──────────────────────────────────────────────
-        if (!Validator.isValidPhoneNumber(jTextFieldPhoneNum.getText())) {
-            showWarn("Invalid Phone Number.\nRequired format: xxx-xxx-xxxx");
+
+        String phone = jTextFieldPhoneNum.getText().trim();
+        if (phone.length() != 11 || !phone.startsWith("09")) {
+            showWarn("Invalid Phone Number.\nMust be 11 digits starting with 09 (e.g. 09171234567).");
             jTextFieldPhoneNum.requestFocus();
             return false;
         }
- 
-        // ── SSS Number ────────────────────────────────────────────────
-        if (!Validator.isValidSssNumber(jTextFieldSSSNum.getText())) {
-            showWarn("Invalid SSS Number.\nRequired format: xx-xxxxxxx-x");
+
+        String sss = jTextFieldSSSNum.getText().trim();
+        if (sss.length() != 10) {
+            showWarn("SSS Number must be exactly 10 digits.");
             jTextFieldSSSNum.requestFocus();
             return false;
         }
- 
-        // ── PhilHealth Number ─────────────────────────────────────────
-        if (!Validator.isValidPhilhealthNumber(jTextFieldPhilHealthNum.getText())) {
-            showWarn("Invalid PhilHealth Number.\nMust be exactly 12 digits.");
+
+        String philhealth = jTextFieldPhilHealthNum.getText().trim();
+        if (philhealth.length() != 12) {
+            showWarn("PhilHealth Number must be exactly 12 digits.");
             jTextFieldPhilHealthNum.requestFocus();
             return false;
         }
- 
-        // ── TIN Number ────────────────────────────────────────────────
-        if (!Validator.isValidTin(jTextFieldTINNum.getText())) {
-            showWarn("Invalid TIN Number.\nRequired format: xxx-xxx-xxx-xxx");
+
+        String tin = jTextFieldTINNum.getText().trim();
+        if (tin.length() != 12) {
+            showWarn("TIN Number must be exactly 12 digits.");
             jTextFieldTINNum.requestFocus();
             return false;
         }
- 
-        // ── Pag-IBIG Number ───────────────────────────────────────────
-        if (!Validator.isValidPagibigNumber(jTextFieldPagibigNum.getText())) {
-            showWarn("Invalid Pag-IBIG Number.\nMust be exactly 12 digits.");
+
+        String pagibig = jTextFieldPagibigNum.getText().trim();
+        if (pagibig.length() != 12) {
+            showWarn("Pag-IBIG Number must be exactly 12 digits.");
             jTextFieldPagibigNum.requestFocus();
             return false;
         }
- 
-        // ── Salary fields ─────────────────────────────────────────────
+
         if (!isPositiveDecimal(jTextFieldBasicSalary.getText())) {
             showWarn("Basic Salary must be a positive number (e.g. 25000.00).");
             jTextFieldBasicSalary.requestFocus();
@@ -194,11 +352,10 @@ public class CreateEmployee extends javax.swing.JFrame {
             jTextFieldHourlyRate.requestFocus();
             return false;
         }
- 
+
         return true;
     }
- 
-    /** Returns true if the string parses as a positive decimal number. */
+
     private boolean isPositiveDecimal(String value) {
         if (value == null || value.trim().isEmpty()) return false;
         try {
@@ -207,8 +364,7 @@ public class CreateEmployee extends javax.swing.JFrame {
             return false;
         }
     }
- 
-    /** Check if employee ID already exists in the database. */
+
     private boolean isDuplicateEmployee(String empId) {
         try {
             return employeeDAO.findById(empId) != null;
@@ -217,7 +373,7 @@ public class CreateEmployee extends javax.swing.JFrame {
             return false;
         }
     }
- 
+
     private void showWarn(String msg) {
         JOptionPane.showMessageDialog(this, msg,
                 "Validation Error", JOptionPane.WARNING_MESSAGE);
@@ -262,6 +418,7 @@ public class CreateEmployee extends javax.swing.JFrame {
         jLabel23 = new javax.swing.JLabel();
         jTextFieldFirstName = new javax.swing.JTextField();
         jCalendarBirthday = new com.toedter.calendar.JCalendar();
+        jButtonBack = new javax.swing.JButton();
         jPanel4 = new javax.swing.JPanel();
         jLabel9 = new javax.swing.JLabel();
         jTextFieldPhoneAllowance = new javax.swing.JTextField();
@@ -401,6 +558,10 @@ public class CreateEmployee extends javax.swing.JFrame {
         jCalendarBirthday.setSundayForeground(new java.awt.Color(255, 51, 51));
         jPanel2.add(jCalendarBirthday, new org.netbeans.lib.awtextra.AbsoluteConstraints(130, 100, 210, 110));
 
+        jButtonBack.setText("Back");
+        jButtonBack.addActionListener(this::jButtonBackActionPerformed);
+        jPanel2.add(jButtonBack, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 300, 120, 40));
+
         jPanel4.setBackground(new java.awt.Color(0, 255, 204));
         jPanel4.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         jPanel4.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
@@ -525,27 +686,24 @@ public class CreateEmployee extends javax.swing.JFrame {
     private void jButtonSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSaveActionPerformed
         
         // ── Step 1: Validate all fields ───────────────────────────────
-        if (!validateAllFields()) return;
- 
+         if (!validateAllFields()) return;
+
         String empId = jTextFieldEmpNum1.getText().trim();
- 
-        // ── Step 2: Duplicate check ───────────────────────────────────
+
         if (isDuplicateEmployee(empId)) {
             JOptionPane.showMessageDialog(this,
                     "Employee ID \"" + empId + "\" already exists in the database.\n"
                     + "Please use a different Employee Number.",
-                    "Duplicate Employee",
-                    JOptionPane.ERROR_MESSAGE);
+                    "Duplicate Employee", JOptionPane.ERROR_MESSAGE);
             jTextFieldEmpNum1.requestFocus();
             return;
         }
- 
-        // ── Step 3: Build Employee object ─────────────────────────────
+
         try {
-            String status   = (String) jComboBoxStatus.getSelectedItem();
-            String position = (String) jComboBoxPosition.getSelectedItem();
+            String status     = (String) jComboBoxStatus.getSelectedItem();
+            String position   = (String) jComboBoxPosition.getSelectedItem();
             String supervisor = (String) jComboBoxSupervisor.getSelectedItem();
- 
+
             Employee.EmploymentStatus statusEnum;
             try {
                 statusEnum = Employee.EmploymentStatus.valueOf(
@@ -553,40 +711,49 @@ public class CreateEmployee extends javax.swing.JFrame {
             } catch (IllegalArgumentException ignore) {
                 statusEnum = Employee.EmploymentStatus.PROBATIONARY;
             }
- 
+
             LocalDate birthdayDate = jCalendarBirthday.getDate()
                     .toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
- 
+
+            // Format government IDs with dashes before saving
+            String phone      = jTextFieldPhoneNum.getText().trim();
+            String sss        = jTextFieldSSSNum.getText().trim();
+            String philhealth = jTextFieldPhilHealthNum.getText().trim();
+            String tin        = jTextFieldTINNum.getText().trim();
+            String pagibig    = jTextFieldPagibigNum.getText().trim();
+
+            // SSS: XX-XXXXXXX-X
+            String sssFormatted = sss.substring(0, 2) + "-"
+                    + sss.substring(2, 9) + "-" + sss.substring(9);
+            // TIN: XXX-XXX-XXX-XXX
+            String tinFormatted = tin.substring(0, 3) + "-" + tin.substring(3, 6)
+                    + "-" + tin.substring(6, 9) + "-" + tin.substring(9);
+            // Phone: 09XX-XXX-XXXX
+            String phoneFormatted = phone.substring(0, 4) + "-"
+                    + phone.substring(4, 7) + "-" + phone.substring(7);
+
             Employee emp = new Employee.Builder(
                     empId,
                     jTextFieldLastName.getText().trim(),
                     jTextFieldFirstName.getText().trim(),
                     birthdayDate)
                     .withAddress(jTextFieldAddress.getText().trim())
-                    .withPhoneNumber(jTextFieldPhoneNum.getText().trim())
-                    .withSssNumber(jTextFieldSSSNum.getText().trim())
-                    .withPhilhealthNumber(jTextFieldPhilHealthNum.getText().trim())
-                    .withTinNumber(jTextFieldTINNum.getText().trim())
-                    .withPagIbigNumber(jTextFieldPagibigNum.getText().trim())
+                    .withPhoneNumber(phoneFormatted)
+                    .withSssNumber(sssFormatted)
+                    .withPhilhealthNumber(philhealth)
+                    .withTinNumber(tinFormatted)
+                    .withPagIbigNumber(pagibig)
                     .withStatus(statusEnum)
                     .withPosition(position)
-                    .withImmediateSupervisor(
-                            "N/A".equals(supervisor) ? "" : supervisor)
-                    .withBasicSalary(new BigDecimal(
-                            jTextFieldBasicSalary.getText().trim()))
-                    .withRiceSubsidy(new BigDecimal(
-                            jTextFieldRiceSubsidy.getText().trim()))
-                    .withPhoneAllowance(new BigDecimal(
-                            jTextFieldPhoneAllowance.getText().trim()))
-                    .withClothingAllowance(new BigDecimal(
-                            jTextFieldClothingAllowance.getText().trim()))
-                    .withGrossSemiMonthlyRate(new BigDecimal(
-                            jTextFieldGrossSemiMonthly.getText().trim()))
-                    .withHourlyRate(new BigDecimal(
-                            jTextFieldHourlyRate.getText().trim()))
+                    .withImmediateSupervisor("N/A".equals(supervisor) ? "" : supervisor)
+                    .withBasicSalary(new BigDecimal(jTextFieldBasicSalary.getText().trim()))
+                    .withRiceSubsidy(new BigDecimal(jTextFieldRiceSubsidy.getText().trim()))
+                    .withPhoneAllowance(new BigDecimal(jTextFieldPhoneAllowance.getText().trim()))
+                    .withClothingAllowance(new BigDecimal(jTextFieldClothingAllowance.getText().trim()))
+                    .withGrossSemiMonthlyRate(new BigDecimal(jTextFieldGrossSemiMonthly.getText().trim()))
+                    .withHourlyRate(new BigDecimal(jTextFieldHourlyRate.getText().trim()))
                     .build();
- 
-            // ── Step 4: Save to database ──────────────────────────────
+
             boolean saved = employeeDAO.create(emp);
             if (saved) {
                 JOptionPane.showMessageDialog(this,
@@ -600,7 +767,7 @@ public class CreateEmployee extends javax.swing.JFrame {
                         "Employee was not saved. Please try again.",
                         "Save Failed", JOptionPane.ERROR_MESSAGE);
             }
- 
+
         } catch (SQLException ex) {
             logger.log(Level.SEVERE, "Database error creating employee", ex);
             JOptionPane.showMessageDialog(this,
@@ -618,12 +785,17 @@ public class CreateEmployee extends javax.swing.JFrame {
         // TODO add your handling code here:
         if (parentFrame != null) parentFrame.setVisible(true);
         this.dispose();
-        this.setVisible(false);
     }//GEN-LAST:event_jButtonCancelActionPerformed
 
     private void jTextFieldPhilHealthNumActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldPhilHealthNumActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_jTextFieldPhilHealthNumActionPerformed
+
+    private void jButtonBackActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonBackActionPerformed
+        // TODO add your handling code here:
+        if (parentFrame != null) parentFrame.setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_jButtonBackActionPerformed
 
     /**
      * @param args the command line arguments
@@ -645,6 +817,7 @@ public class CreateEmployee extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton jButtonBack;
     private javax.swing.JButton jButtonCancel;
     private javax.swing.JButton jButtonSave;
     private com.toedter.calendar.JCalendar jCalendarBirthday;

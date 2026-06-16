@@ -1,5 +1,5 @@
 package ui;
- 
+
 import DAO.EmployeeDAO;
 import Model.Employee;
 import Model.Role;
@@ -12,26 +12,25 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import javax.swing.JOptionPane;
- 
+
 public class ViewEmployee extends javax.swing.JFrame {
- 
+
     private static final java.util.logging.Logger logger =
             java.util.logging.Logger.getLogger(ViewEmployee.class.getName());
- 
+
     private final UserAccount  currentUser;
     private       Employee     currentEmployee;
     private javax.swing.JFrame parentFrame = null;
- 
+
     private final EmployeeDAO employeeDAO = new EmployeeDAO();
- 
-    // ── Roles that can access Leave Management ────────────────────────────
+
     private static final java.util.Set<Role> LEAVE_MGMT_ROLES =
             java.util.EnumSet.of(Role.ADMIN, Role.HR);
- 
+
     // ─────────────────────────────────────────────────────────────────────
     //  Constructors
     // ─────────────────────────────────────────────────────────────────────
- 
+
     public ViewEmployee(UserAccount user) {
         this.currentUser = user;
         initComponents();
@@ -39,8 +38,9 @@ public class ViewEmployee extends javax.swing.JFrame {
         setTitle("MotorPH Payroll System");
         configureRoleVisibility();
         loadCurrentEmployee();
+        button6.addActionListener(this::button6ActionPerformed);
     }
- 
+
     public ViewEmployee(UserAccount user, Employee employee,
                         javax.swing.JFrame parent) {
         this.currentUser     = user;
@@ -52,26 +52,43 @@ public class ViewEmployee extends javax.swing.JFrame {
                  employee.getFirstName() + " " + employee.getLastName());
         configureRoleVisibility();
         populateFields(employee);
+        button6.addActionListener(this::button6ActionPerformed);
     }
- 
+
     public ViewEmployee() {
         this.currentUser = null;
         initComponents();
     }
- 
+
     // ─────────────────────────────────────────────────────────────────────
     //  Role-based visibility
     // ─────────────────────────────────────────────────────────────────────
- 
-   private void configureRoleVisibility() {
-    // All buttons visible to all roles
-    // Access control is enforced on click inside each button's action handler
-}
- 
+
+    private void configureRoleVisibility() {
+        if (currentUser == null) return;
+        Role role = currentUser.getRole();
+
+        // Manage Employee — ADMIN and HR only
+        button2.setVisible(role == Role.ADMIN || role == Role.HR);
+
+        // Leave Request — not for FINANCE or IT
+        button1.setVisible(role != Role.FINANCE && role != Role.IT);
+        jButtonFileLeave.setVisible(role != Role.FINANCE && role != Role.IT);
+
+        // Manage Leave — ADMIN and HR only
+        button5.setVisible(role == Role.ADMIN || role == Role.HR);
+
+        // Pay Information — visible to ALL roles
+        button6.setVisible(true);
+
+        // Hide duplicate Pay Information button
+        button7.setVisible(false);
+    }
+
     // ─────────────────────────────────────────────────────────────────────
     //  Data loading
     // ─────────────────────────────────────────────────────────────────────
- 
+
     private void loadCurrentEmployee() {
         if (currentUser == null) return;
         String empId = currentUser.getEmployeeID();
@@ -97,7 +114,7 @@ public class ViewEmployee extends javax.swing.JFrame {
                     "Database Error", JOptionPane.ERROR_MESSAGE);
         }
     }
- 
+
     private void populateFields(Employee e) {
         jTextFieldEmpNum1.setText(safe(e.getEmployeeId()));
         jTextFieldLastName1.setText(safe(e.getLastName()));
@@ -124,11 +141,12 @@ public class ViewEmployee extends javax.swing.JFrame {
         jTextFieldGrossPay1.setText("");
         jTextFieldNetPay1.setText("");
     }
- 
+
     private String safe(String v) { return v != null ? v : ""; }
     private String fmt(BigDecimal v) {
         return v != null ? String.format("%,.2f", v) : "0.00";
     }
+
  
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -503,6 +521,7 @@ public class ViewEmployee extends javax.swing.JFrame {
 
         button6.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         button6.setLabel("Pay Information");
+        button6.addActionListener(this::button6ActionPerformed);
         jPanel3.add(button6, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 140, 140, 60));
 
         button7.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
@@ -553,21 +572,19 @@ public class ViewEmployee extends javax.swing.JFrame {
     }//GEN-LAST:event_jTextFieldPagIBIGContribution1ActionPerformed
  
     /** Manage Leave button — ADMIN and HR only. */
+   
     private void button5ActionPerformed(java.awt.event.ActionEvent evt) {
         if (currentUser == null ||
                 !LEAVE_MGMT_ROLES.contains(currentUser.getRole())) {
             JOptionPane.showMessageDialog(this,
-                    "Access Denied.\n\n"
-                    + "You do not have permission to access Leave Management.\n"
-                    + "This feature is available to Admin and HR roles only.",
-                    "Access Restricted",
-                    JOptionPane.WARNING_MESSAGE);
+                    "Access Denied.\nThis feature is available to Admin and HR roles only.",
+                    "Access Restricted", JOptionPane.WARNING_MESSAGE);
             return;
         }
         this.setVisible(false);
         new LeaveManagement(currentUser, this).setVisible(true);
     }
-    
+     
     private void jButtonCompute1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonCompute1ActionPerformed
        if (currentEmployee == null) {
             JOptionPane.showMessageDialog(this,
@@ -578,14 +595,14 @@ public class ViewEmployee extends javax.swing.JFrame {
         try {
             String selectedMonth = (String) jComboBoxMonth1.getSelectedItem();
             int workingDays = getWorkingDaysForMonth(selectedMonth);
- 
+
             if (workingDays <= 0) {
                 JOptionPane.showMessageDialog(this,
                         "Please select a valid month.", "Error",
                         JOptionPane.WARNING_MESSAGE);
                 return;
             }
- 
+
             BigDecimal hourlyRate = currentEmployee.getHourlyRate();
             if (hourlyRate == null || hourlyRate.compareTo(BigDecimal.ZERO) == 0) {
                 JOptionPane.showMessageDialog(this,
@@ -593,11 +610,11 @@ public class ViewEmployee extends javax.swing.JFrame {
                         JOptionPane.WARNING_MESSAGE);
                 return;
             }
- 
+
             BigDecimal calculatedBasicSalary = hourlyRate
                     .multiply(new BigDecimal(8))
                     .multiply(new BigDecimal(workingDays));
- 
+
             Employee tempEmp = new Employee.Builder(
                     currentEmployee.getEmployeeId(),
                     currentEmployee.getLastName(),
@@ -609,24 +626,24 @@ public class ViewEmployee extends javax.swing.JFrame {
                     .withClothingAllowance(currentEmployee.getClothingAllowance())
                     .withHourlyRate(hourlyRate)
                     .build();
- 
+
             SalaryDeduction statutory = new SalaryDeduction();
             WithholdingTax  tax       = new WithholdingTax();
             statutory.calculate(tempEmp);
             tax.setTotalDeduction(statutory.getAmount());
             tax.calculate(tempEmp);
- 
+
             double totalDeductions = statutory.getAmount() + tax.getAmount();
             TotalPay total = new TotalPay();
             total.calculatePayroll(tempEmp, totalDeductions);
- 
+
             jTextFieldBasicSalary1.setText(String.format("%,.2f", calculatedBasicSalary));
             jTextFieldSSSContribution1.setText(String.format("%,.2f", statutory.getSSS()));
             jTextFieldPhilHealthContribution1.setText(String.format("%,.2f", statutory.getPhilDeduct()));
             jTextFieldPagIBIGContribution1.setText(String.format("%,.2f", statutory.getPagibigDeduct()));
             jTextFieldGrossPay1.setText(String.format("%,.2f", total.getGross()));
             jTextFieldNetPay1.setText(String.format("%,.2f", total.getNet()));
- 
+
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this,
                     "Error in calculation: " + e.getMessage(),
@@ -636,15 +653,14 @@ public class ViewEmployee extends javax.swing.JFrame {
 
     private void jButtonBack1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonBack1ActionPerformed
          if (parentFrame != null) {
-            // Opened by an Admin from a parent dashboard — go back there
             parentFrame.setVisible(true);
             this.dispose();
         } else {
-            // Opened directly from Login — log out and return to Login
             SessionManager.getInstance().logout();
             new ui.Login().setVisible(true);
             this.dispose();
         }
+
     }//GEN-LAST:event_jButtonBack1ActionPerformed
 
     private void jButtonFileLeaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonFileLeaveActionPerformed
@@ -671,13 +687,24 @@ public class ViewEmployee extends javax.swing.JFrame {
 
     private void button1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_button1ActionPerformed
         this.setVisible(false);
-    new LeaveRequestForm(currentUser, currentEmployee, this).setVisible(true);
+        new LeaveRequestForm(currentUser, currentEmployee, this).setVisible(true);
     }//GEN-LAST:event_button1ActionPerformed
 
     private void button2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_button2ActionPerformed
         this.setVisible(false);
-    new AdminPage(currentUser, this).setVisible(true);
+        new AdminPage(currentUser, this).setVisible(true);
     }//GEN-LAST:event_button2ActionPerformed
+
+    private void button6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_button6ActionPerformed
+        if (currentEmployee == null) {
+        JOptionPane.showMessageDialog(this,
+                "No employee record loaded.",
+                "Error", JOptionPane.ERROR_MESSAGE);
+        return;
+    }
+    this.setVisible(false);
+    new PayslipForm(currentUser, currentEmployee, this).setVisible(true);
+    }//GEN-LAST:event_button6ActionPerformed
 
     /**
      * @param args the command line arguments

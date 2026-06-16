@@ -210,6 +210,10 @@ public class AdminPage extends javax.swing.JFrame {
         jTextAreaAddress = new javax.swing.JTextArea();
         jButtonLogout = new javax.swing.JButton();
         jButtonLeaveManagement = new javax.swing.JButton();
+        jButtonLogout1 = new javax.swing.JButton();
+        jButtonLogout2 = new javax.swing.JButton();
+        jButtonLogout3 = new javax.swing.JButton();
+        jButtonBack = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -244,31 +248,24 @@ public class AdminPage extends javax.swing.JFrame {
         jTextFieldEmpNum.setEditable(false);
         jPanel1.add(jTextFieldEmpNum, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 130, 70, 30));
 
-        jLabel6.setForeground(new java.awt.Color(255, 255, 255));
         jLabel6.setText("Employee Number: ");
         jPanel1.add(jLabel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 140, -1, 20));
 
-        jLabel7.setForeground(new java.awt.Color(255, 255, 255));
         jLabel7.setText("Last Name:");
         jPanel1.add(jLabel7, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 180, -1, 20));
 
-        jLabel8.setForeground(new java.awt.Color(255, 255, 255));
         jLabel8.setText("First Name:");
         jPanel1.add(jLabel8, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 220, -1, 20));
 
-        jLabel9.setForeground(new java.awt.Color(255, 255, 255));
         jLabel9.setText("Phone No.:");
         jPanel1.add(jLabel9, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 260, -1, 20));
 
-        jLabel10.setForeground(new java.awt.Color(255, 255, 255));
         jLabel10.setText("Address:");
         jPanel1.add(jLabel10, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 310, -1, 20));
 
-        jLabel11.setForeground(new java.awt.Color(255, 255, 255));
         jLabel11.setText("Supervisor:");
         jPanel1.add(jLabel11, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 350, 70, 20));
 
-        jLabel5.setForeground(new java.awt.Color(255, 255, 255));
         jLabel5.setText("Position:");
         jPanel1.add(jLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 390, 50, 20));
 
@@ -317,7 +314,6 @@ public class AdminPage extends javax.swing.JFrame {
         jButtonViewEmployeeDetails.addActionListener(this::jButtonViewEmployeeDetailsActionPerformed);
         jPanel1.add(jButtonViewEmployeeDetails, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 480, 130, 30));
 
-        jLabel12.setForeground(new java.awt.Color(255, 255, 255));
         jLabel12.setText("Status:");
         jPanel1.add(jLabel12, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 420, 50, 30));
 
@@ -340,6 +336,25 @@ public class AdminPage extends javax.swing.JFrame {
         jButtonLeaveManagement.setText("Leave Management");
         jButtonLeaveManagement.addActionListener(this::jButtonLeaveManagementActionPerformed);
         jPanel1.add(jButtonLeaveManagement, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 80, 200, 40));
+
+        jButtonLogout1.setBackground(new java.awt.Color(0, 255, 204));
+        jButtonLogout1.setText("Logout");
+        jButtonLogout1.addActionListener(this::jButtonLogout1ActionPerformed);
+        jPanel1.add(jButtonLogout1, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 30, 80, 30));
+
+        jButtonLogout2.setBackground(new java.awt.Color(0, 255, 204));
+        jButtonLogout2.setText("Logout");
+        jButtonLogout2.addActionListener(this::jButtonLogout2ActionPerformed);
+        jPanel1.add(jButtonLogout2, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 30, 80, 30));
+
+        jButtonLogout3.setBackground(new java.awt.Color(0, 255, 204));
+        jButtonLogout3.setText("Logout");
+        jButtonLogout3.addActionListener(this::jButtonLogout3ActionPerformed);
+        jPanel1.add(jButtonLogout3, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 30, 80, 30));
+
+        jButtonBack.setText("Back");
+        jButtonBack.addActionListener(this::jButtonBackActionPerformed);
+        jPanel1.add(jButtonBack, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 573, 120, 40));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -551,6 +566,24 @@ public class AdminPage extends javax.swing.JFrame {
         new LeaveManagement(currentUser, this).setVisible(true);
     }//GEN-LAST:event_jButtonLeaveManagementActionPerformed
 
+    private void jButtonLogout1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLogout1ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jButtonLogout1ActionPerformed
+
+    private void jButtonLogout2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLogout2ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jButtonLogout2ActionPerformed
+
+    private void jButtonLogout3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLogout3ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jButtonLogout3ActionPerformed
+
+    private void jButtonBackActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonBackActionPerformed
+        // TODO add your handling code here:
+        if (parentFrame != null) parentFrame.setVisible(true);
+    this.dispose();
+    }//GEN-LAST:event_jButtonBackActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -571,12 +604,16 @@ public class AdminPage extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton jButtonBack;
     private javax.swing.JButton jButtonClear;
     private javax.swing.JButton jButtonCreateRec;
     private javax.swing.JButton jButtonDeleteRec;
     private javax.swing.JButton jButtonEditRec;
     private javax.swing.JButton jButtonLeaveManagement;
     private javax.swing.JButton jButtonLogout;
+    private javax.swing.JButton jButtonLogout1;
+    private javax.swing.JButton jButtonLogout2;
+    private javax.swing.JButton jButtonLogout3;
     private javax.swing.JButton jButtonRefresh;
     private javax.swing.JButton jButtonViewAllEmp;
     private javax.swing.JButton jButtonViewEmployeeDetails;

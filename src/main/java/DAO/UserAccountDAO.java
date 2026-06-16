@@ -148,15 +148,16 @@ public class UserAccountDAO implements DataAccessObject<UserAccount> {
     }
  
     private Role dbNameToRole(String name) {
-        if (name == null) return Role.EMPLOYEE;
-        return switch (name.toUpperCase()) {
-            case "HRADMIN" -> Role.ADMIN;
-            case "HR"      -> Role.HR;
-            case "FINANCE" -> Role.FINANCE;
-            case "IT"      -> Role.IT;
-            default        -> Role.EMPLOYEE;
-        };
-    }
+    if (name == null) return Role.EMPLOYEE;
+    return switch (name.toUpperCase()) {
+        case "ADMIN"    -> Role.ADMIN;
+        case "HR"       -> Role.HR;
+        case "FINANCE"  -> Role.FINANCE;
+        case "IT"       -> Role.IT;
+        case "EMPLOYEE" -> Role.EMPLOYEE;
+        default         -> Role.EMPLOYEE;
+    };
+}
  
     private int rolePriority(Role r) {
         return switch (r) {
