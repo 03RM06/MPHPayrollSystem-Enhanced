@@ -63,13 +63,10 @@ public class ViewEmployee extends javax.swing.JFrame {
     //  Role-based visibility
     // ─────────────────────────────────────────────────────────────────────
  
-    private void configureRoleVisibility() {
-        boolean privileged = currentUser != null &&
-                             currentUser.getRole() != Role.EMPLOYEE;
-        button1.setVisible(privileged);  // Leave Request (side nav)
-        button2.setVisible(privileged);  // Manage Employee (side nav)
-        // button5 (Manage Leave) stays visible but access is checked on click
-    }
+   private void configureRoleVisibility() {
+    // All buttons visible to all roles
+    // Access control is enforced on click inside each button's action handler
+}
  
     // ─────────────────────────────────────────────────────────────────────
     //  Data loading
@@ -453,15 +450,17 @@ public class ViewEmployee extends javax.swing.JFrame {
 
         button1.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         button1.setLabel("Leave Request");
+        button1.addActionListener(this::button1ActionPerformed);
 
         button2.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         button2.setLabel("Manage Employee");
+        button2.addActionListener(this::button2ActionPerformed);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(button1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(button1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
             .addComponent(button2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         jPanel1Layout.setVerticalGroup(
@@ -552,6 +551,8 @@ public class ViewEmployee extends javax.swing.JFrame {
     private void jTextFieldPagIBIGContribution1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldPagIBIGContribution1ActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_jTextFieldPagIBIGContribution1ActionPerformed
+ 
+    /** Manage Leave button — ADMIN and HR only. */
     private void button5ActionPerformed(java.awt.event.ActionEvent evt) {
         if (currentUser == null ||
                 !LEAVE_MGMT_ROLES.contains(currentUser.getRole())) {
@@ -567,20 +568,6 @@ public class ViewEmployee extends javax.swing.JFrame {
         new LeaveManagement(currentUser, this).setVisible(true);
     }
     
-    private void button2ActionPerformed(java.awt.event.ActionEvent evt) {
-        if (currentUser == null || currentUser.getRole() != Role.HR
-                && currentUser.getRole() != Role.ADMIN) {
-            JOptionPane.showMessageDialog(this,
-                    "Access Denied.\n\n"
-                    + "You do not have permission to manage employees.\n"
-                    + "This feature is available to HR and Admin roles only.",
-                    "Access Restricted",
-                    JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-        this.setVisible(false);
-        new CreateEmployee(currentUser, this).setVisible(true);
-    }
     private void jButtonCompute1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonCompute1ActionPerformed
        if (currentEmployee == null) {
             JOptionPane.showMessageDialog(this,
@@ -599,7 +586,6 @@ public class ViewEmployee extends javax.swing.JFrame {
                 return;
             }
  
-            // Basic salary = hourly rate × 8 hrs × working days in month
             BigDecimal hourlyRate = currentEmployee.getHourlyRate();
             if (hourlyRate == null || hourlyRate.compareTo(BigDecimal.ZERO) == 0) {
                 JOptionPane.showMessageDialog(this,
@@ -612,7 +598,6 @@ public class ViewEmployee extends javax.swing.JFrame {
                     .multiply(new BigDecimal(8))
                     .multiply(new BigDecimal(workingDays));
  
-            // Build a temporary Employee with the month-calculated salary
             Employee tempEmp = new Employee.Builder(
                     currentEmployee.getEmployeeId(),
                     currentEmployee.getLastName(),
@@ -625,40 +610,27 @@ public class ViewEmployee extends javax.swing.JFrame {
                     .withHourlyRate(hourlyRate)
                     .build();
  
-            // Calculate deductions
             SalaryDeduction statutory = new SalaryDeduction();
             WithholdingTax  tax       = new WithholdingTax();
- 
             statutory.calculate(tempEmp);
- 
             tax.setTotalDeduction(statutory.getAmount());
             tax.calculate(tempEmp);
  
             double totalDeductions = statutory.getAmount() + tax.getAmount();
- 
-            // Calculate totals
             TotalPay total = new TotalPay();
             total.calculatePayroll(tempEmp, totalDeductions);
  
-            // Update display fields
-            jTextFieldBasicSalary1.setText(
-                    String.format("%,.2f", calculatedBasicSalary));
-            jTextFieldSSSContribution1.setText(
-                    String.format("%,.2f", statutory.getSSS()));
-            jTextFieldPhilHealthContribution1.setText(
-                    String.format("%,.2f", statutory.getPhilDeduct()));
-            jTextFieldPagIBIGContribution1.setText(
-                    String.format("%,.2f", statutory.getPagibigDeduct()));
-            jTextFieldGrossPay1.setText(
-                    String.format("%,.2f", total.getGross()));
-            jTextFieldNetPay1.setText(
-                    String.format("%,.2f", total.getNet()));
+            jTextFieldBasicSalary1.setText(String.format("%,.2f", calculatedBasicSalary));
+            jTextFieldSSSContribution1.setText(String.format("%,.2f", statutory.getSSS()));
+            jTextFieldPhilHealthContribution1.setText(String.format("%,.2f", statutory.getPhilDeduct()));
+            jTextFieldPagIBIGContribution1.setText(String.format("%,.2f", statutory.getPagibigDeduct()));
+            jTextFieldGrossPay1.setText(String.format("%,.2f", total.getGross()));
+            jTextFieldNetPay1.setText(String.format("%,.2f", total.getNet()));
  
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this,
                     "Error in calculation: " + e.getMessage(),
                     "Calculation Error", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
         }
     }//GEN-LAST:event_jButtonCompute1ActionPerformed
 
@@ -676,10 +648,16 @@ public class ViewEmployee extends javax.swing.JFrame {
     }//GEN-LAST:event_jButtonBack1ActionPerformed
 
     private void jButtonFileLeaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonFileLeaveActionPerformed
-        JOptionPane.showMessageDialog(this,
-                "Leave filing feature coming soon.",
-                "File Leave", JOptionPane.INFORMATION_MESSAGE);
+        if (currentEmployee == null) {
+            JOptionPane.showMessageDialog(this,
+                    "Employee record not loaded. Cannot file leave.",
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        this.setVisible(false);
+        new LeaveRequestForm(currentUser, currentEmployee, this).setVisible(true);
     }
+    
     private int getWorkingDaysForMonth(String month) {
         return switch (month) {
             case "February"                              -> 20;
@@ -690,6 +668,16 @@ public class ViewEmployee extends javax.swing.JFrame {
             default                                     -> 0;
         };
     }//GEN-LAST:event_jButtonFileLeaveActionPerformed
+
+    private void button1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_button1ActionPerformed
+        this.setVisible(false);
+    new LeaveRequestForm(currentUser, currentEmployee, this).setVisible(true);
+    }//GEN-LAST:event_button1ActionPerformed
+
+    private void button2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_button2ActionPerformed
+        this.setVisible(false);
+    new AdminPage(currentUser, this).setVisible(true);
+    }//GEN-LAST:event_button2ActionPerformed
 
     /**
      * @param args the command line arguments

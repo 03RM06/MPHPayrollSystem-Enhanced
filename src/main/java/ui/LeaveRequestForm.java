@@ -27,15 +27,21 @@ public class LeaveRequestForm extends javax.swing.JFrame {
     //  Primary constructor — called from ViewEmployee "File Leave" button
     // ─────────────────────────────────────────────────────────────────────
     public LeaveRequestForm(UserAccount user, Employee employee,
-                             javax.swing.JFrame parent) {
-        this.currentUser     = user;
-        this.currentEmployee = employee;
-        this.parentFrame     = parent;
-        initComponents();
-        setLocationRelativeTo(null);
-        setTitle("MotorPH — Leave Request Form");
-        populateEmployeeFields();
-    }
+                         javax.swing.JFrame parent) {
+    this.currentUser     = user;
+    this.currentEmployee = employee;
+    this.parentFrame     = parent;
+    initComponents();
+    setLocationRelativeTo(null);
+    setTitle("MotorPH — Leave Request Form");
+    
+    // ADD THIS LINE - overrides the generated combo box values
+    jComboBoxLeaveType.setModel(new javax.swing.DefaultComboBoxModel<>(new String[]{
+        "Emergency Leave", "Maternity Leave", "Paternity Leave", "Sick Leave", "Vacation Leave"
+    }));
+    
+    populateEmployeeFields();
+}
  
     /** No-arg constructor — kept for NetBeans Form Editor only. */
     public LeaveRequestForm() {
@@ -228,12 +234,14 @@ public class LeaveRequestForm extends javax.swing.JFrame {
         SimpleDateFormat iso = new SimpleDateFormat("yyyy-MM-dd");
  
         try {
-            leaveDAO.addLeaveRequest(
-                    currentEmployee.getEmployeeId(),
-                    (String) jComboBoxLeaveType.getSelectedItem(),
-                    iso.format(fromDate),
-                    iso.format(toDate),
-                    ""
+            String employeeName = currentEmployee.getFirstName() + " " + currentEmployee.getLastName();
+leaveDAO.addLeaveRequest(
+        currentEmployee.getEmployeeId(),
+        employeeName,
+        (String) jComboBoxLeaveType.getSelectedItem(),
+        iso.format(fromDate),
+        iso.format(toDate),
+        ""
             );
             JOptionPane.showMessageDialog(this,
                     "Leave request submitted successfully!",
