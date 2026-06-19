@@ -48,12 +48,16 @@
             <version>1.4</version>
         </dependency>
         
-        <dependency>
+         <dependency>
        <groupId>net.sf.jasperreports</groupId>
        <artifactId>jasperreports</artifactId>
        <version>7.0.7</version>
    </dependency>
-
+   <dependency>
+       <groupId>net.sf.jasperreports</groupId>
+       <artifactId>jasperreports-pdf</artifactId>
+       <version>7.0.7</version>
+   </dependency>
     </dependencies>
 
     <build>
@@ -77,7 +81,9 @@
                     <mainClass>ui.Login</mainClass>
                 </configuration>
             </plugin>
-
+            
+            
+            
             <!-- JAR plugin — sets the Main-Class in the manifest -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

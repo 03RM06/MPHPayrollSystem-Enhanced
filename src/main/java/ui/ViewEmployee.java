@@ -758,7 +758,7 @@ public class ViewEmployee extends javax.swing.JFrame {
                 Map<String, Object> psParams = new HashMap<>();
                 psParams.put("periodLabel", periodLabel);
                 reportService.viewReport("payroll_summary.jrxml", psParams,
-                        dataService.buildPayrollSummary());
+                        dataService.buildPayrollSummary(fromDate, toDate));
             }
             case "Employee Timecard" -> {
                 String empId = JOptionPane.showInputDialog(this, "Enter Employee ID:");

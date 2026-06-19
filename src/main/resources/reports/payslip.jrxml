@@ -1,0 +1,204 @@
+<jasperReport name="payslip" language="java" pageWidth="595" pageHeight="842" columnWidth="535" leftMargin="30" rightMargin="30" topMargin="20" bottomMargin="20" whenNoDataType="AllSectionsNoDetail" uuid="6b6f7e2a-1a2b-4c3d-9e8f-7a6b5c4d3e2f">
+	<parameter name="payslipNo" class="java.lang.String"/>
+	<parameter name="periodStartDate" class="java.lang.String"/>
+	<parameter name="periodEndDate" class="java.lang.String"/>
+	<parameter name="employeeId" class="java.lang.String"/>
+	<parameter name="employeeName" class="java.lang.String"/>
+	<parameter name="positionDept" class="java.lang.String"/>
+	<parameter name="monthlySalary" class="java.math.BigDecimal"/>
+	<parameter name="dailyRate" class="java.math.BigDecimal"/>
+	<parameter name="daysWorked" class="java.lang.Integer"/>
+	<parameter name="overtimePay" class="java.math.BigDecimal"/>
+	<parameter name="grossIncome" class="java.math.BigDecimal"/>
+	<parameter name="riceSubsidy" class="java.math.BigDecimal"/>
+	<parameter name="phoneAllowance" class="java.math.BigDecimal"/>
+	<parameter name="clothingAllowance" class="java.math.BigDecimal"/>
+	<parameter name="benefitsTotal" class="java.math.BigDecimal"/>
+	<parameter name="sssContribution" class="java.math.BigDecimal"/>
+	<parameter name="philhealthContribution" class="java.math.BigDecimal"/>
+	<parameter name="pagibigContribution" class="java.math.BigDecimal"/>
+	<parameter name="withholdingTax" class="java.math.BigDecimal"/>
+	<parameter name="totalDeductions" class="java.math.BigDecimal"/>
+	<parameter name="takeHomePay" class="java.math.BigDecimal"/>
+	<title height="700">
+		<element kind="image" uuid="1a2b3c4d-0001-0001-0001-000000000001" x="0" y="0" width="65" height="65" onErrorType="Blank">
+			<expression><![CDATA[Thread.currentThread().getContextClassLoader().getResourceAsStream("reports/motorph_logo.png")]]></expression>
+		</element>
+		<element kind="textField" uuid="1a2b3c4d-0001-0001-0001-000000000002" x="75" y="2" width="300" height="28" fontSize="22.0" bold="true" italic="true" forecolor="#1F3554">
+			<expression><![CDATA["MotorPH"]]></expression>
+		</element>
+		<element kind="textField" uuid="1a2b3c4d-0001-0001-0001-000000000003" x="75" y="32" width="460" height="13" fontSize="8.0" forecolor="#1F3554">
+			<expression><![CDATA["7 Jupiter Avenue cor. F. Sandoval Jr., Bagong Nayon, Quezon City"]]></expression>
+		</element>
+		<element kind="textField" uuid="1a2b3c4d-0001-0001-0001-000000000004" x="75" y="45" width="460" height="13" fontSize="8.0" forecolor="#1F3554">
+			<expression><![CDATA["Phone: (028) 911-5071 / (028) 911-5072 / (028) 911-5073"]]></expression>
+		</element>
+		<element kind="textField" uuid="1a2b3c4d-0001-0001-0001-000000000005" x="75" y="58" width="460" height="13" fontSize="8.0" forecolor="#1F3554">
+			<expression><![CDATA["Email: corporate@motorph.com"]]></expression>
+		</element>
+		<element kind="textField" uuid="1a2b3c4d-0001-0001-0001-000000000006" x="0" y="85" width="535" height="22" fontSize="15.0" bold="true" underline="true" hTextAlign="Center" forecolor="#1F3554">
+			<expression><![CDATA["EMPLOYEE PAYSLIP"]]></expression>
+		</element>
+		<element kind="staticText" uuid="1a2b3c4d-0001-0001-0001-000000000007" x="0" y="120" width="130" height="18" mode="Opaque" backcolor="#E8EAED" bold="true" fontSize="8.0">
+			<text><![CDATA[PAYSLIP NO]]></text>
+		</element>
+		<element kind="textField" uuid="1a2b3c4d-0001-0001-0001-000000000008" x="130" y="120" width="165" height="18" fontSize="9.0">
+			<expression><![CDATA[$P{payslipNo}]]></expression>
+		</element>
+		<element kind="staticText" uuid="1a2b3c4d-0001-0001-0001-000000000009" x="295" y="120" width="130" height="18" mode="Opaque" backcolor="#E8EAED" bold="true" fontSize="8.0">
+			<text><![CDATA[PERIOD START DATE]]></text>
+		</element>
+		<element kind="textField" uuid="1a2b3c4d-0001-0001-0001-00000000000a" x="425" y="120" width="110" height="18" fontSize="9.0">
+			<expression><![CDATA[$P{periodStartDate}]]></expression>
+		</element>
+		<element kind="staticText" uuid="1a2b3c4d-0001-0001-0001-00000000000b" x="0" y="138" width="130" height="18" mode="Opaque" backcolor="#E8EAED" bold="true" fontSize="8.0">
+			<text><![CDATA[EMPLOYEE ID]]></text>
+		</element>
+		<element kind="textField" uuid="1a2b3c4d-0001-0001-0001-00000000000c" x="130" y="138" width="165" height="18" fontSize="9.0">
+			<expression><![CDATA[$P{employeeId}]]></expression>
+		</element>
+		<element kind="staticText" uuid="1a2b3c4d-0001-0001-0001-00000000000d" x="295" y="138" width="130" height="18" mode="Opaque" backcolor="#E8EAED" bold="true" fontSize="8.0">
+			<text><![CDATA[PERIOD END DATE]]></text>
+		</element>
+		<element kind="textField" uuid="1a2b3c4d-0001-0001-0001-00000000000e" x="425" y="138" width="110" height="18" fontSize="9.0">
+			<expression><![CDATA[$P{periodEndDate}]]></expression>
+		</element>
+		<element kind="staticText" uuid="1a2b3c4d-0001-0001-0001-00000000000f" x="0" y="156" width="130" height="32" mode="Opaque" backcolor="#E8EAED" bold="true" fontSize="8.0">
+			<text><![CDATA[EMPLOYEE NAME]]></text>
+		</element>
+		<element kind="textField" uuid="1a2b3c4d-0001-0001-0001-000000000010" x="130" y="156" width="165" height="32" fontSize="9.0">
+			<expression><![CDATA[$P{employeeName}]]></expression>
+		</element>
+		<element kind="staticText" uuid="1a2b3c4d-0001-0001-0001-000000000011" x="295" y="156" width="130" height="32" mode="Opaque" backcolor="#E8EAED" bold="true" fontSize="8.0">
+			<text><![CDATA[EMPLOYEE POSITION/DEPARTMENT]]></text>
+		</element>
+		<element kind="textField" uuid="1a2b3c4d-0001-0001-0001-000000000012" x="425" y="156" width="110" height="32" fontSize="9.0">
+			<expression><![CDATA[$P{positionDept}]]></expression>
+		</element>
+		<element kind="staticText" uuid="1a2b3c4d-0002-0002-0002-000000000001" x="0" y="210" width="535" height="18" mode="Opaque" backcolor="#1F3554" forecolor="#FFFFFF" bold="true" fontSize="9.0">
+			<text><![CDATA[EARNINGS]]></text>
+		</element>
+		<element kind="staticText" uuid="1a2b3c4d-0002-0002-0002-000000000002" x="10" y="232" width="250" height="16" fontSize="9.0" forecolor="#2E5C9A">
+			<text><![CDATA[Monthly Salary]]></text>
+		</element>
+		<element kind="textField" uuid="1a2b3c4d-0002-0002-0002-000000000003" x="400" y="232" width="125" height="16" fontSize="9.0" hTextAlign="Right" pattern="'₱'#,##0.00">
+			<expression><![CDATA[$P{monthlySalary}]]></expression>
+		</element>
+		<element kind="staticText" uuid="1a2b3c4d-0002-0002-0002-000000000004" x="10" y="250" width="250" height="16" fontSize="9.0" forecolor="#2E5C9A">
+			<text><![CDATA[Daily Rate]]></text>
+		</element>
+		<element kind="textField" uuid="1a2b3c4d-0002-0002-0002-000000000005" x="400" y="250" width="125" height="16" fontSize="9.0" hTextAlign="Right" pattern="'₱'#,##0.00">
+			<expression><![CDATA[$P{dailyRate}]]></expression>
+		</element>
+		<element kind="staticText" uuid="1a2b3c4d-0002-0002-0002-000000000006" x="10" y="268" width="250" height="16" fontSize="9.0" forecolor="#2E5C9A">
+			<text><![CDATA[Days Worked]]></text>
+		</element>
+		<element kind="textField" uuid="1a2b3c4d-0002-0002-0002-000000000007" x="400" y="268" width="125" height="16" fontSize="9.0" hTextAlign="Right">
+			<expression><![CDATA[$P{daysWorked}]]></expression>
+		</element>
+		<element kind="staticText" uuid="1a2b3c4d-0002-0002-0002-000000000008" x="10" y="286" width="250" height="16" fontSize="9.0" forecolor="#2E5C9A">
+			<text><![CDATA[Overtime]]></text>
+		</element>
+		<element kind="textField" uuid="1a2b3c4d-0002-0002-0002-000000000009" x="400" y="286" width="125" height="16" fontSize="9.0" hTextAlign="Right" pattern="'₱'#,##0.00">
+			<expression><![CDATA[$P{overtimePay}]]></expression>
+		</element>
+		<element kind="staticText" uuid="1a2b3c4d-0002-0002-0002-00000000000a" x="0" y="306" width="400" height="20" mode="Opaque" backcolor="#EFEFEF" bold="true" fontSize="9.0">
+			<text><![CDATA[GROSS INCOME]]></text>
+		</element>
+		<element kind="textField" uuid="1a2b3c4d-0002-0002-0002-00000000000b" x="400" y="306" width="125" height="20" mode="Opaque" backcolor="#EFEFEF" bold="true" fontSize="9.0" hTextAlign="Right" pattern="'₱'#,##0.00">
+			<expression><![CDATA[$P{grossIncome}]]></expression>
+		</element>
+		<element kind="staticText" uuid="1a2b3c4d-0003-0003-0003-000000000001" x="0" y="336" width="535" height="18" mode="Opaque" backcolor="#1F3554" forecolor="#FFFFFF" bold="true" fontSize="9.0">
+			<text><![CDATA[BENEFITS]]></text>
+		</element>
+		<element kind="staticText" uuid="1a2b3c4d-0003-0003-0003-000000000002" x="10" y="358" width="250" height="16" fontSize="9.0" forecolor="#2E5C9A">
+			<text><![CDATA[Rice Subsidy]]></text>
+		</element>
+		<element kind="textField" uuid="1a2b3c4d-0003-0003-0003-000000000003" x="400" y="358" width="125" height="16" fontSize="9.0" hTextAlign="Right" pattern="'₱'#,##0.00">
+			<expression><![CDATA[$P{riceSubsidy}]]></expression>
+		</element>
+		<element kind="staticText" uuid="1a2b3c4d-0003-0003-0003-000000000004" x="10" y="376" width="250" height="16" fontSize="9.0" forecolor="#2E5C9A">
+			<text><![CDATA[Phone Allowance]]></text>
+		</element>
+		<element kind="textField" uuid="1a2b3c4d-0003-0003-0003-000000000005" x="400" y="376" width="125" height="16" fontSize="9.0" hTextAlign="Right" pattern="'₱'#,##0.00">
+			<expression><![CDATA[$P{phoneAllowance}]]></expression>
+		</element>
+		<element kind="staticText" uuid="1a2b3c4d-0003-0003-0003-000000000006" x="10" y="394" width="250" height="16" fontSize="9.0" forecolor="#2E5C9A">
+			<text><![CDATA[Clothing Allowance]]></text>
+		</element>
+		<element kind="textField" uuid="1a2b3c4d-0003-0003-0003-000000000007" x="400" y="394" width="125" height="16" fontSize="9.0" hTextAlign="Right" pattern="'₱'#,##0.00">
+			<expression><![CDATA[$P{clothingAllowance}]]></expression>
+		</element>
+		<element kind="staticText" uuid="1a2b3c4d-0003-0003-0003-000000000008" x="0" y="414" width="400" height="20" mode="Opaque" backcolor="#EFEFEF" bold="true" fontSize="9.0">
+			<text><![CDATA[TOTAL]]></text>
+		</element>
+		<element kind="textField" uuid="1a2b3c4d-0003-0003-0003-000000000009" x="400" y="414" width="125" height="20" mode="Opaque" backcolor="#EFEFEF" bold="true" fontSize="9.0" hTextAlign="Right" pattern="'₱'#,##0.00">
+			<expression><![CDATA[$P{benefitsTotal}]]></expression>
+		</element>
+		<element kind="staticText" uuid="1a2b3c4d-0004-0004-0004-000000000001" x="0" y="444" width="535" height="18" mode="Opaque" backcolor="#1F3554" forecolor="#FFFFFF" bold="true" fontSize="9.0">
+			<text><![CDATA[DEDUCTIONS]]></text>
+		</element>
+		<element kind="staticText" uuid="1a2b3c4d-0004-0004-0004-000000000002" x="10" y="466" width="250" height="16" fontSize="9.0">
+			<text><![CDATA[Social Security System]]></text>
+		</element>
+		<element kind="textField" uuid="1a2b3c4d-0004-0004-0004-000000000003" x="400" y="466" width="125" height="16" fontSize="9.0" hTextAlign="Right" pattern="'₱'#,##0.00">
+			<expression><![CDATA[$P{sssContribution}]]></expression>
+		</element>
+		<element kind="staticText" uuid="1a2b3c4d-0004-0004-0004-000000000004" x="10" y="484" width="250" height="16" fontSize="9.0">
+			<text><![CDATA[Philhealth]]></text>
+		</element>
+		<element kind="textField" uuid="1a2b3c4d-0004-0004-0004-000000000005" x="400" y="484" width="125" height="16" fontSize="9.0" hTextAlign="Right" pattern="'₱'#,##0.00">
+			<expression><![CDATA[$P{philhealthContribution}]]></expression>
+		</element>
+		<element kind="staticText" uuid="1a2b3c4d-0004-0004-0004-000000000006" x="10" y="502" width="250" height="16" fontSize="9.0">
+			<text><![CDATA[Pag-Ibig]]></text>
+		</element>
+		<element kind="textField" uuid="1a2b3c4d-0004-0004-0004-000000000007" x="400" y="502" width="125" height="16" fontSize="9.0" hTextAlign="Right" pattern="'₱'#,##0.00">
+			<expression><![CDATA[$P{pagibigContribution}]]></expression>
+		</element>
+		<element kind="staticText" uuid="1a2b3c4d-0004-0004-0004-000000000008" x="10" y="520" width="250" height="16" fontSize="9.0">
+			<text><![CDATA[Withholding Tax]]></text>
+		</element>
+		<element kind="textField" uuid="1a2b3c4d-0004-0004-0004-000000000009" x="400" y="520" width="125" height="16" fontSize="9.0" hTextAlign="Right" pattern="'₱'#,##0.00">
+			<expression><![CDATA[$P{withholdingTax}]]></expression>
+		</element>
+		<element kind="staticText" uuid="1a2b3c4d-0004-0004-0004-00000000000a" x="0" y="540" width="400" height="20" mode="Opaque" backcolor="#EFEFEF" bold="true" fontSize="9.0">
+			<text><![CDATA[TOTAL DEDUCTIONS]]></text>
+		</element>
+		<element kind="textField" uuid="1a2b3c4d-0004-0004-0004-00000000000b" x="400" y="540" width="125" height="20" mode="Opaque" backcolor="#EFEFEF" bold="true" fontSize="9.0" hTextAlign="Right" pattern="'₱'#,##0.00">
+			<expression><![CDATA[$P{totalDeductions}]]></expression>
+		</element>
+		<element kind="staticText" uuid="1a2b3c4d-0005-0005-0005-000000000001" x="0" y="570" width="535" height="18" mode="Opaque" backcolor="#1F3554" forecolor="#FFFFFF" bold="true" fontSize="9.0">
+			<text><![CDATA[SUMMARY]]></text>
+		</element>
+		<element kind="staticText" uuid="1a2b3c4d-0005-0005-0005-000000000002" x="10" y="592" width="250" height="16" fontSize="9.0" forecolor="#2E5C9A">
+			<text><![CDATA[Gross Income]]></text>
+		</element>
+		<element kind="textField" uuid="1a2b3c4d-0005-0005-0005-000000000003" x="400" y="592" width="125" height="16" fontSize="9.0" hTextAlign="Right" pattern="'₱'#,##0.00">
+			<expression><![CDATA[$P{grossIncome}]]></expression>
+		</element>
+		<element kind="staticText" uuid="1a2b3c4d-0005-0005-0005-000000000004" x="10" y="610" width="250" height="16" fontSize="9.0" forecolor="#2E5C9A">
+			<text><![CDATA[Benefits]]></text>
+		</element>
+		<element kind="textField" uuid="1a2b3c4d-0005-0005-0005-000000000005" x="400" y="610" width="125" height="16" fontSize="9.0" hTextAlign="Right" pattern="'₱'#,##0.00">
+			<expression><![CDATA[$P{benefitsTotal}]]></expression>
+		</element>
+		<element kind="staticText" uuid="1a2b3c4d-0005-0005-0005-000000000006" x="10" y="628" width="250" height="16" fontSize="9.0">
+			<text><![CDATA[Deductions]]></text>
+		</element>
+		<element kind="textField" uuid="1a2b3c4d-0005-0005-0005-000000000007" x="400" y="628" width="125" height="16" fontSize="9.0" hTextAlign="Right" pattern="'₱'#,##0.00">
+			<expression><![CDATA[$P{totalDeductions}]]></expression>
+		</element>
+		<element kind="staticText" uuid="1a2b3c4d-0005-0005-0005-000000000008" x="0" y="650" width="400" height="24" bold="true" underline="true" fontSize="12.0">
+			<text><![CDATA[TAKE HOME PAY]]></text>
+		</element>
+		<element kind="textField" uuid="1a2b3c4d-0005-0005-0005-000000000009" x="400" y="650" width="125" height="24" bold="true" underline="true" fontSize="12.0" hTextAlign="Right" pattern="'₱'#,##0.00">
+			<expression><![CDATA[$P{takeHomePay}]]></expression>
+		</element>
+	</title>
+	<pageFooter height="20">
+		<element kind="textField" uuid="1a2b3c4d-0006-0006-0006-000000000001" x="0" y="0" width="535" height="14" fontSize="7.0" italic="true" hTextAlign="Center" forecolor="#888888">
+			<expression><![CDATA["This is a system-generated payslip."]]></expression>
+		</element>
+	</pageFooter>
+</jasperReport>

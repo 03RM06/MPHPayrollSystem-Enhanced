@@ -4,14 +4,19 @@ import DAO.EmployeeDAO;
 import Model.Employee;
 import Model.Role;
 import Model.UserAccount;
+import Services.ReportDataService;
+import Services.ReportService;
 import Services.SalaryDeduction;
 import Services.WithholdingTax;
+import java.time.LocalDate;
+import java.util.Map;
 import Model.TotalPay;
 import java.awt.event.ActionEvent;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import javax.swing.JOptionPane;
+
 
 public class PayslipForm extends javax.swing.JFrame {
 
@@ -50,20 +55,22 @@ public class PayslipForm extends javax.swing.JFrame {
             populateEmployeeFields(employee);
         }
 
-        // Set up month/year combos
-        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[]{
-            "January", "February", "March", "April", "May", "June",
-            "July", "August", "September", "October", "November", "December"
-        }));
-        jComboBox2.setModel(new javax.swing.DefaultComboBoxModel<>(new String[]{
-            "2023", "2024", "2025", "2026"
-        }));
+         // Default date range: first day of current month -> today
+        java.time.LocalDate today = java.time.LocalDate.now();
+        jDateChooser2From.setDate(java.sql.Date.valueOf(today.withDayOfMonth(1)));
+        jDateChooser1To.setDate(java.sql.Date.valueOf(today));
+
+        // Wire search button for Finance
+        button1.addActionListener(this::button1ActionPerformed);
 
         // Wire search button for Finance
         button1.addActionListener(this::button1ActionPerformed);
 
         // Wire compute button (View Payslip)
         button4.addActionListener(this::button4ActionPerformed);
+
+        // Wire Print button
+        button2.addActionListener(this::button2ActionPerformed);
     }
 
     public PayslipForm(javax.swing.JFrame parent) {
@@ -107,61 +114,27 @@ public class PayslipForm extends javax.swing.JFrame {
             return;
         }
 
-        String selectedMonth = (String) jComboBox1.getSelectedItem();
-        int workingDays = getWorkingDaysForMonth(selectedMonth);
-
-        BigDecimal hourlyRate = currentEmployee.getHourlyRate();
-        if (hourlyRate == null || hourlyRate.compareTo(BigDecimal.ZERO) == 0) {
-            JOptionPane.showMessageDialog(this,
-                    "Employee has no hourly rate on record.", "Error",
-                    JOptionPane.WARNING_MESSAGE);
-            return;
-        }
+        LocalDate[] period = getSelectedPeriod();
+        if (period == null) return;
 
         try {
-            BigDecimal basicPay = hourlyRate
-                    .multiply(new BigDecimal(8))
-                    .multiply(new BigDecimal(workingDays));
+            Map<String, Object> params = new ReportDataService()
+                    .buildPayslipParams(currentEmployee.getEmployeeId(), period[0], period[1]);
 
-            BigDecimal allowances = BigDecimal.ZERO;
-            if (currentEmployee.getRiceSubsidy() != null)
-                allowances = allowances.add(currentEmployee.getRiceSubsidy());
-            if (currentEmployee.getPhoneAllowance() != null)
-                allowances = allowances.add(currentEmployee.getPhoneAllowance());
-            if (currentEmployee.getClothingAllowance() != null)
-                allowances = allowances.add(currentEmployee.getClothingAllowance());
+            BigDecimal grossIncome = (BigDecimal) params.get("grossIncome");
+            BigDecimal overtimePay = (BigDecimal) params.get("overtimePay");
+            BigDecimal benefitsTotal = (BigDecimal) params.get("benefitsTotal");
+            BigDecimal grossPay = grossIncome.add(overtimePay).add(benefitsTotal);
 
-            Employee tempEmp = new Employee.Builder(
-                    currentEmployee.getEmployeeId(),
-                    currentEmployee.getLastName(),
-                    currentEmployee.getFirstName(),
-                    currentEmployee.getBirthday())
-                    .withBasicSalary(basicPay)
-                    .withRiceSubsidy(currentEmployee.getRiceSubsidy())
-                    .withPhoneAllowance(currentEmployee.getPhoneAllowance())
-                    .withClothingAllowance(currentEmployee.getClothingAllowance())
-                    .withHourlyRate(hourlyRate)
-                    .build();
-
-            SalaryDeduction statutory = new SalaryDeduction();
-            WithholdingTax  tax       = new WithholdingTax();
-            statutory.calculate(tempEmp);
-            tax.setTotalDeduction(statutory.getAmount());
-            tax.calculate(tempEmp);
-
-            double totalDeductions = statutory.getAmount() + tax.getAmount();
-            TotalPay total = new TotalPay();
-            total.calculatePayroll(tempEmp, totalDeductions);
-
-            textField6.setText(fmt(basicPay));
-            textField7.setText("0.00"); // Overtime — placeholder
-            textField8.setText(fmt(allowances));
-            textField9.setText(String.format("%,.2f", total.getGross()));
-            textField10.setText(String.format("%,.2f", statutory.getSSS()));
-            textField12.setText(String.format("%,.2f", statutory.getPhilDeduct()));
-            textField11.setText(String.format("%,.2f", statutory.getPagibigDeduct()));
-            textField13.setText(String.format("%,.2f", tax.getAmount()));
-            textField14.setText(String.format("%,.2f", total.getNet()));
+            textField6.setText(fmt(grossIncome));
+            textField7.setText(fmt(overtimePay));
+            textField8.setText(fmt(benefitsTotal));
+            textField9.setText(fmt(grossPay));
+            textField10.setText(fmt((BigDecimal) params.get("sssContribution")));
+            textField12.setText(fmt((BigDecimal) params.get("philhealthContribution")));
+            textField11.setText(fmt((BigDecimal) params.get("pagibigContribution")));
+            textField13.setText(fmt((BigDecimal) params.get("withholdingTax")));
+            textField14.setText(fmt((BigDecimal) params.get("takeHomePay")));
 
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Payslip computation error", e);
@@ -181,7 +154,48 @@ public class PayslipForm extends javax.swing.JFrame {
             default                                     -> 0;
         };
     }
+   private LocalDate[] getSelectedPeriod() {
+        java.util.Date from = jDateChooser2From.getDate();
+        java.util.Date to = jDateChooser1To.getDate();
 
+        if (from == null || to == null) {
+            JOptionPane.showMessageDialog(this,
+                    "Please select both a 'From' and 'To' date.",
+                    "Missing Date", JOptionPane.WARNING_MESSAGE);
+            return null;
+        }
+
+        LocalDate start = from.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate();
+        LocalDate end = to.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate();
+
+        if (start.isAfter(end)) {
+            JOptionPane.showMessageDialog(this,
+                    "'From' date must not be after 'To' date.",
+                    "Invalid Range", JOptionPane.WARNING_MESSAGE);
+            return null;
+        }
+
+        return new LocalDate[]{start, end};
+    }
+
+    private void button2ActionPerformed(ActionEvent evt) {
+        if (currentEmployee == null) {
+            JOptionPane.showMessageDialog(this, "No employee loaded.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        LocalDate[] period = getSelectedPeriod();
+        if (period == null) return;
+        try {
+            Map<String, Object> params = new ReportDataService()
+                    .buildPayslipParams(currentEmployee.getEmployeeId(), period[0], period[1]);
+            new ReportService().viewReportWithParams("payslip.jrxml", params);
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, "Payslip print failed", ex);
+            JOptionPane.showMessageDialog(this,
+                    "Error generating payslip:\n" + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
     private String safe(String v) { return v != null ? v : ""; }
     private String fmt(BigDecimal v) {
         return v != null ? String.format("%,.2f", v) : "0.00";
@@ -204,8 +218,6 @@ public class PayslipForm extends javax.swing.JFrame {
         jLabel7 = new javax.swing.JLabel();
         textField5 = new java.awt.TextField();
         jLabel8 = new javax.swing.JLabel();
-        jComboBox1 = new javax.swing.JComboBox<>();
-        jComboBox2 = new javax.swing.JComboBox<>();
         jLabel9 = new javax.swing.JLabel();
         jLabel10 = new javax.swing.JLabel();
         jLabel11 = new javax.swing.JLabel();
@@ -229,6 +241,10 @@ public class PayslipForm extends javax.swing.JFrame {
         button4 = new java.awt.Button();
         button5 = new java.awt.Button();
         jButtonBack = new javax.swing.JButton();
+        jDateChooser1To = new com.toedter.calendar.JDateChooser();
+        jDateChooser2From = new com.toedter.calendar.JDateChooser();
+        jLabel18 = new javax.swing.JLabel();
+        jLabel19 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setTitle("MotorPH Payslip Viewer");
@@ -285,11 +301,6 @@ public class PayslipForm extends javax.swing.JFrame {
 
         jLabel8.setText("Employee Information");
 
-        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-        jComboBox1.addActionListener(this::jComboBox1ActionPerformed);
-
-        jComboBox2.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-
         jLabel9.setText("Basic Pay:");
 
         jLabel10.setText("Overtime Pay:");
@@ -340,6 +351,10 @@ public class PayslipForm extends javax.swing.JFrame {
         jButtonBack.setText("Back");
         jButtonBack.addActionListener(this::jButtonBackActionPerformed);
 
+        jLabel18.setText("From:");
+
+        jLabel19.setText("To:");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -370,40 +385,48 @@ public class PayslipForm extends javax.swing.JFrame {
                                     .addComponent(jLabel15)
                                     .addComponent(jLabel16)
                                     .addComponent(jLabel17, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(layout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(textField1, javax.swing.GroupLayout.PREFERRED_SIZE, 83, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(button1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addGroup(layout.createSequentialGroup()
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(textField2, javax.swing.GroupLayout.PREFERRED_SIZE, 194, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(textField3, javax.swing.GroupLayout.PREFERRED_SIZE, 194, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(textField6, javax.swing.GroupLayout.PREFERRED_SIZE, 194, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(textField5, javax.swing.GroupLayout.PREFERRED_SIZE, 194, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addGap(0, 0, Short.MAX_VALUE)))
-                        .addGap(128, 128, 128))
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addComponent(textField1, javax.swing.GroupLayout.PREFERRED_SIZE, 83, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                        .addComponent(button1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addComponent(textField2, javax.swing.GroupLayout.PREFERRED_SIZE, 194, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                            .addComponent(textField3, javax.swing.GroupLayout.PREFERRED_SIZE, 194, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                            .addComponent(textField6, javax.swing.GroupLayout.PREFERRED_SIZE, 194, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                            .addComponent(textField5, javax.swing.GroupLayout.PREFERRED_SIZE, 194, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                        .addGap(0, 0, Short.MAX_VALUE)))
+                                .addGap(128, 128, 128))
+                            .addGroup(layout.createSequentialGroup()
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(textField9, javax.swing.GroupLayout.PREFERRED_SIZE, 194, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(textField8, javax.swing.GroupLayout.PREFERRED_SIZE, 194, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(textField7, javax.swing.GroupLayout.PREFERRED_SIZE, 194, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(textField10, javax.swing.GroupLayout.PREFERRED_SIZE, 194, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(textField12, javax.swing.GroupLayout.PREFERRED_SIZE, 194, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(textField11, javax.swing.GroupLayout.PREFERRED_SIZE, 194, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(textField13, javax.swing.GroupLayout.PREFERRED_SIZE, 194, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(textField14, javax.swing.GroupLayout.PREFERRED_SIZE, 194, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addGap(343, 343, 343)
+                                        .addComponent(button5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jComboBox2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(textField9, javax.swing.GroupLayout.PREFERRED_SIZE, 194, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(textField8, javax.swing.GroupLayout.PREFERRED_SIZE, 194, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(textField7, javax.swing.GroupLayout.PREFERRED_SIZE, 194, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(textField10, javax.swing.GroupLayout.PREFERRED_SIZE, 194, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(textField12, javax.swing.GroupLayout.PREFERRED_SIZE, 194, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(textField11, javax.swing.GroupLayout.PREFERRED_SIZE, 194, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(textField13, javax.swing.GroupLayout.PREFERRED_SIZE, 194, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(textField14, javax.swing.GroupLayout.PREFERRED_SIZE, 194, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(343, 343, 343)
-                                .addComponent(button5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                        .addGap(25, 25, 25)
+                        .addComponent(jLabel18, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jDateChooser2From, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jLabel19)
+                        .addGap(18, 18, 18)
+                        .addComponent(jDateChooser1To, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(153, 153, 153))))
             .addGroup(layout.createSequentialGroup()
                 .addGap(46, 46, 46)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
@@ -423,34 +446,37 @@ public class PayslipForm extends javax.swing.JFrame {
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
+                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(32, 32, 32)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(button1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                    .addComponent(textField1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                    .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(32, 32, 32)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(button1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                            .addComponent(textField1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                            .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(0, 0, Short.MAX_VALUE)
-                                .addComponent(jLabel5))
-                            .addComponent(textField2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel6)
-                            .addComponent(textField3, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel7)
-                            .addComponent(textField5, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel3)
-                            .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, 19, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jComboBox2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(jLabel5))
+                    .addComponent(textField2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel6)
+                    .addComponent(textField3, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel7)
+                    .addComponent(textField5, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 13, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jLabel19, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                        .addComponent(jLabel3)
+                        .addComponent(jDateChooser1To, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jDateChooser2From, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jLabel18, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(jLabel9, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(textField6, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
@@ -468,9 +494,7 @@ public class PayslipForm extends javax.swing.JFrame {
                             .addComponent(textField9, javax.swing.GroupLayout.PREFERRED_SIZE, 16, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGap(73, 73, 73)
                         .addComponent(jLabel13))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(textField10, javax.swing.GroupLayout.PREFERRED_SIZE, 16, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(textField10, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 16, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel14)
@@ -493,7 +517,7 @@ public class PayslipForm extends javax.swing.JFrame {
                     .addComponent(button5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(button4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(button3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 81, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 78, Short.MAX_VALUE)
                 .addComponent(jButtonBack, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(40, 40, 40))
             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -523,10 +547,6 @@ public class PayslipForm extends javax.swing.JFrame {
     private void textField5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_textField5ActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_textField5ActionPerformed
-
-    private void jComboBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBox1ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jComboBox1ActionPerformed
 
     private void textField6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_textField6ActionPerformed
         // TODO add your handling code here:
@@ -565,9 +585,32 @@ public class PayslipForm extends javax.swing.JFrame {
     }//GEN-LAST:event_textField14ActionPerformed
 
     private void button3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_button3ActionPerformed
-        JOptionPane.showMessageDialog(this,
-                "PDF generation coming soon.",
-                "Coming Soon", JOptionPane.INFORMATION_MESSAGE);
+        if (currentEmployee == null) {
+            JOptionPane.showMessageDialog(this, "No employee loaded.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        LocalDate[] period = getSelectedPeriod();
+        if (period == null) return;
+
+        javax.swing.JFileChooser chooser = new javax.swing.JFileChooser();
+        chooser.setSelectedFile(new java.io.File(currentEmployee.getEmployeeId() + "_payslip.pdf"));
+        if (chooser.showSaveDialog(this) != javax.swing.JFileChooser.APPROVE_OPTION) return;
+
+        try {
+            Map<String, Object> params = new ReportDataService()
+                    .buildPayslipParams(currentEmployee.getEmployeeId(), period[0], period[1]);
+            String path = chooser.getSelectedFile().getAbsolutePath();
+            if (!path.toLowerCase().endsWith(".pdf")) path += ".pdf";
+            new ReportService().exportToPdfWithParams("payslip.jrxml", params, path);
+            JOptionPane.showMessageDialog(this,
+                    "Payslip saved to:\n" + path,
+                    "Success", JOptionPane.INFORMATION_MESSAGE);
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, "Payslip PDF export failed", ex);
+            JOptionPane.showMessageDialog(this,
+                    "Error generating PDF:\n" + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_button3ActionPerformed
 
     private void jButtonBackActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonBackActionPerformed
@@ -601,8 +644,8 @@ public class PayslipForm extends javax.swing.JFrame {
     private java.awt.Button button4;
     private java.awt.Button button5;
     private javax.swing.JButton jButtonBack;
-    private javax.swing.JComboBox<String> jComboBox1;
-    private javax.swing.JComboBox<String> jComboBox2;
+    private com.toedter.calendar.JDateChooser jDateChooser1To;
+    private com.toedter.calendar.JDateChooser jDateChooser2From;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
@@ -612,6 +655,8 @@ public class PayslipForm extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel15;
     private javax.swing.JLabel jLabel16;
     private javax.swing.JLabel jLabel17;
+    private javax.swing.JLabel jLabel18;
+    private javax.swing.JLabel jLabel19;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;

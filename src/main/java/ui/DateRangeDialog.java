@@ -1,26 +1,65 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
- */
 package ui;
-
+ 
 import java.time.LocalDate;
-
+import java.time.ZoneId;
+import java.util.Date;
+import javax.swing.JOptionPane;
+ 
 /**
  *
  * @author USER
  */
-public class DateRangeDialog extends javax.swing.JFrame {
-
-    static LocalDate[] showDateRangeDialog(ViewEmployee aThis) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-    }
-
+public class DateRangeDialog extends javax.swing.JDialog {
+ 
+    private LocalDate[] result;
+    private boolean confirmed = false;
+ 
     /**
-     * Creates new form DateRangeDialog
+     * Shows the date range picker modally and returns the chosen
+     * {from, to} range, or null if the user cancelled or picked
+     * an invalid range.
+     */
+    static LocalDate[] showDateRangeDialog(java.awt.Component parent) {
+        java.awt.Window owner = javax.swing.SwingUtilities.getWindowAncestor(parent);
+        java.awt.Frame ownerFrame = (owner instanceof java.awt.Frame) ? (java.awt.Frame) owner : null;
+ 
+        DateRangeDialog dialog = new DateRangeDialog(ownerFrame);
+        dialog.setVisible(true); // blocks here (modal) until Okay/Cancel/closed
+        return dialog.confirmed ? dialog.result : null;
+    }
+ 
+    /**
+     * Creates new form DateRangeDialog (used by the Form Editor's preview / design mode)
      */
     public DateRangeDialog() {
+        super((java.awt.Frame) null, "Select Date Range", true);
         initComponents();
+        setDefaults();
+    }
+ 
+    public DateRangeDialog(java.awt.Frame owner) {
+        super(owner, "Select Date Range", true);
+        initComponents();
+        setDefaults();
+        setLocationRelativeTo(owner);
+    }
+ 
+    /** Default range: first day of current month -> today. Also fixes the
+     *  close operation, since the Designer sets EXIT_ON_CLOSE by default
+     *  inside initComponents(), which would be wrong for a dialog. */
+    private void setDefaults() {
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        LocalDate today = LocalDate.now();
+        jDateChooser1.setDate(toDate(today.withDayOfMonth(1)));
+        jDateChooser2.setDate(toDate(today));
+    }
+ 
+    private static Date toDate(LocalDate d) {
+        return java.sql.Date.valueOf(d);
+    }
+ 
+    private static LocalDate toLocalDate(Date d) {
+        return d.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
     }
 
     /**
@@ -32,31 +71,119 @@ public class DateRangeDialog extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        jDateChooser1 = new com.toedter.calendar.JDateChooser();
+        jDateChooser2 = new com.toedter.calendar.JDateChooser();
+        jLabel1From = new javax.swing.JLabel();
+        jLabel1From1 = new javax.swing.JLabel();
+        jButton1Okay = new javax.swing.JButton();
+        jButton1Cancel = new javax.swing.JButton();
+        jLabel1 = new javax.swing.JLabel();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+
+        jLabel1From.setText("From:");
+
+        jLabel1From1.setText("To:");
+
+        jButton1Okay.setText("Okay");
+        jButton1Okay.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1OkayActionPerformed(evt);
+            }
+        });
+
+        jButton1Cancel.setText("Cancel");
+        jButton1Cancel.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1CancelActionPerformed(evt);
+            }
+        });
+
+        jLabel1.setText("Select Date Range");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 400, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addGap(25, 25, 25)
+                .addComponent(jLabel1From, javax.swing.GroupLayout.PREFERRED_SIZE, 43, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jDateChooser1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 28, Short.MAX_VALUE)
+                .addComponent(jLabel1From1, javax.swing.GroupLayout.PREFERRED_SIZE, 43, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jDateChooser2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(73, 73, 73))
+            .addGroup(layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(100, 100, 100)
+                        .addComponent(jButton1Okay)
+                        .addGap(31, 31, 31)
+                        .addComponent(jButton1Cancel))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(142, 142, 142)
+                        .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 105, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 300, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addGap(11, 11, 11)
+                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jDateChooser2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jDateChooser1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jLabel1From, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jLabel1From1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(18, 18, 18)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButton1Okay)
+                    .addComponent(jButton1Cancel))
+                .addContainerGap(32, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private void jButton1OkayActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1OkayActionPerformed
+         Date from = jDateChooser1.getDate();
+        Date to = jDateChooser2.getDate();
+ 
+        if (from == null || to == null) {
+            JOptionPane.showMessageDialog(this,
+                    "Please select both a 'From' and 'To' date.",
+                    "Missing Date", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+ 
+        LocalDate fromDate = toLocalDate(from);
+        LocalDate toDate = toLocalDate(to);
+ 
+        if (fromDate.isAfter(toDate)) {
+            JOptionPane.showMessageDialog(this,
+                    "'From' date must not be after 'To' date.",
+                    "Invalid Range", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+ 
+        result = new LocalDate[]{fromDate, toDate};
+        confirmed = true;
+        dispose();
+                   
+    }//GEN-LAST:event_jButton1OkayActionPerformed
+
+    private void jButton1CancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1CancelActionPerformed
+        confirmed = false;
+        dispose();
+    }//GEN-LAST:event_jButton1CancelActionPerformed
+
     /**
      * @param args the command line arguments
      */
     public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
                 if ("Nimbus".equals(info.getName())) {
@@ -70,12 +197,10 @@ public class DateRangeDialog extends javax.swing.JFrame {
             java.util.logging.Logger.getLogger(DateRangeDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
             java.util.logging.Logger.getLogger(DateRangeDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
             java.util.logging.Logger.getLogger(DateRangeDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
-        //</editor-fold>
 
-        /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 new DateRangeDialog().setVisible(true);
@@ -84,5 +209,12 @@ public class DateRangeDialog extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton jButton1Cancel;
+    private javax.swing.JButton jButton1Okay;
+    private com.toedter.calendar.JDateChooser jDateChooser1;
+    private com.toedter.calendar.JDateChooser jDateChooser2;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel1From;
+    private javax.swing.JLabel jLabel1From1;
     // End of variables declaration//GEN-END:variables
 }
