@@ -36,13 +36,15 @@ public class PayslipForm extends javax.swing.JFrame {
         setLocationRelativeTo(null);
         setTitle("MotorPH — Payslip Viewer");
 
-        // Finance can search other employees, others cannot
-        boolean isFinance = user != null && user.getRole() == Role.FINANCE;
-        textField1.setEnabled(isFinance);
-        button1.setEnabled(isFinance);
-        if (!isFinance) {
-            jLabel4.setText("Employee ID: (view only)");
-        }
+        boolean canViewAllPayslips = user != null &&
+        (user.getRole() == Role.ADMIN ||
+         user.getRole() == Role.HR ||
+         user.getRole() == Role.FINANCE);
+        textField1.setEnabled(canViewAllPayslips);
+        button1.setEnabled(canViewAllPayslips);
+        if (!canViewAllPayslips) {
+         jLabel4.setText("Employee ID: (view only)");
+}
 
         if (employee != null) {
             populateEmployeeFields(employee);
@@ -635,13 +637,16 @@ public class PayslipForm extends javax.swing.JFrame {
     // End of variables declaration//GEN-END:variables
 
     private void button1ActionPerformed(java.awt.event.ActionEvent evt) {
-        // Finance search
-        if (currentUser == null || currentUser.getRole() != Role.FINANCE) {
-            JOptionPane.showMessageDialog(this,
-                    "Access Denied. Only Finance can search other employees.",
-                    "Access Restricted", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
+        boolean canViewAllPayslips = currentUser != null &&
+        (currentUser.getRole() == Role.ADMIN ||
+         currentUser.getRole() == Role.HR ||
+         currentUser.getRole() == Role.FINANCE);
+if (!canViewAllPayslips) {
+    JOptionPane.showMessageDialog(this,
+            "Access Denied. Only Admin, HR, and Finance can search other employees.",
+            "Access Restricted", JOptionPane.WARNING_MESSAGE);
+    return;
+}
         String searchId = textField1.getText().trim();
         if (searchId.isEmpty()) {
             JOptionPane.showMessageDialog(this,

@@ -1,0 +1,79 @@
+<!-- Created with Jaspersoft Studio version 7.0.3.final using JasperReports Library version 7.0.3-41034ca841d452f3305ba55b9042260aaa1ab5dd  -->
+<jasperReport name="timecard" language="java" pageWidth="595" pageHeight="842" columnWidth="535" leftMargin="30" rightMargin="30" topMargin="20" bottomMargin="20" uuid="40e4f6cb-5742-4045-8f1f-f6da481b2e90">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="One Empty Record"/>
+	<parameter name="employeeId" class="java.lang.String"/>
+	<parameter name="employeeName" class="java.lang.String"/>
+	<parameter name="positionDept" class="java.lang.String"/>
+	<parameter name="period" class="java.lang.String"/>
+	<field name="date" class="java.lang.String"/>
+	<field name="day" class="java.lang.String"/>
+	<field name="timeIn" class="java.lang.String"/>
+	<field name="timeOut" class="java.lang.String"/>
+	<field name="totalHours" class="java.lang.String"/>
+	<field name="remarks" class="java.lang.String"/>
+	<title height="120">
+		<element kind="textField" uuid="4023a16e-ebfa-45c8-803c-6010a966f960" x="0" y="0" width="535" height="20" fontSize="16.0" bold="true" hTextAlign="Center">
+			<expression><![CDATA["MotorPH"]]></expression>
+		</element>
+		<element kind="textField" uuid="716b8246-6e97-4be9-a57d-6df58b50517f" x="0" y="20" width="535" height="14" fontSize="8.0" hTextAlign="Center">
+			<expression><![CDATA["7 Jupiter Avenue cor. F. Sandoval Jr., Bagong Nayon, Quezon City"]]></expression>
+		</element>
+		<element kind="textField" uuid="1577db90-e941-4868-add2-e56d73a972c3" x="0" y="45" width="535" height="18" fontSize="13.0" bold="true" hTextAlign="Center">
+			<expression><![CDATA["EMPLOYEE TIMECARD"]]></expression>
+		</element>
+		<element kind="textField" uuid="029f6285-3656-4f01-b1ba-5390ea00faf0" x="0" y="70" width="270" height="16">
+			<expression><![CDATA["Employee ID: " + $P{employeeId}]]></expression>
+		</element>
+		<element kind="textField" uuid="d2ddf3f0-d135-41bf-943c-34a0f582da5f" x="270" y="70" width="265" height="16">
+			<expression><![CDATA["Period: " + $P{period}]]></expression>
+		</element>
+		<element kind="textField" uuid="42a953db-f339-43d5-8d36-f137520df15e" x="0" y="88" width="270" height="16">
+			<expression><![CDATA["Employee Name: " + $P{employeeName}]]></expression>
+		</element>
+		<element kind="textField" uuid="698be93f-d340-4879-a3ab-3db65b0fdd5f" x="270" y="88" width="265" height="16">
+			<expression><![CDATA["Position/Dept: " + $P{positionDept}]]></expression>
+		</element>
+	</title>
+	<columnHeader height="20">
+		<element kind="staticText" uuid="c9b240e2-f540-4e8b-acbc-91901dccdee8" x="0" y="0" width="65" height="20">
+			<text><![CDATA[Date]]></text>
+		</element>
+		<element kind="staticText" uuid="4a7ceb0b-e3ec-4319-bc3c-9df1546cd501" x="65" y="0" width="50" height="20">
+			<text><![CDATA[Day]]></text>
+		</element>
+		<element kind="staticText" uuid="0ec6ec48-bb9e-4a36-9cf3-04abaf4fab9a" x="115" y="0" width="90" height="20">
+			<text><![CDATA[Time In]]></text>
+		</element>
+		<element kind="staticText" uuid="0813dc79-5601-4dea-9389-6258d2b11293" x="205" y="0" width="90" height="20">
+			<text><![CDATA[Time Out]]></text>
+		</element>
+		<element kind="staticText" uuid="878baa52-4880-4316-b8d9-6611a03fd628" x="295" y="0" width="90" height="20">
+			<text><![CDATA[Total Hours]]></text>
+		</element>
+		<element kind="staticText" uuid="0230cd74-c9eb-40fc-af64-2899fca9c85e" x="385" y="0" width="150" height="20">
+			<text><![CDATA[Remarks]]></text>
+		</element>
+	</columnHeader>
+	<detail>
+		<band height="16">
+			<element kind="textField" uuid="d99585bd-09fd-430b-baa0-8a7aee073cf4" x="0" y="0" width="65" height="16">
+				<expression><![CDATA[$F{date}]]></expression>
+			</element>
+			<element kind="textField" uuid="62f10fa3-ef87-4476-9a39-78b08f7550a1" x="65" y="0" width="50" height="16">
+				<expression><![CDATA[$F{day}]]></expression>
+			</element>
+			<element kind="textField" uuid="b5f3b397-1bfd-43c3-989f-68b17dadbf25" x="115" y="0" width="90" height="16">
+				<expression><![CDATA[$F{timeIn}]]></expression>
+			</element>
+			<element kind="textField" uuid="fa25a475-6310-414b-8e98-993ea709e7aa" x="205" y="0" width="90" height="16">
+				<expression><![CDATA[$F{timeOut}]]></expression>
+			</element>
+			<element kind="textField" uuid="1a0b8c12-a4e2-456f-a069-5cfeb52ff75e" x="295" y="0" width="90" height="16">
+				<expression><![CDATA[$F{totalHours}]]></expression>
+			</element>
+			<element kind="textField" uuid="8b1b590e-1a67-4e3d-91ad-1f0ab368e036" x="385" y="0" width="150" height="16">
+				<expression><![CDATA[$F{remarks}]]></expression>
+			</element>
+		</band>
+	</detail>
+</jasperReport>

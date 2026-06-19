@@ -47,6 +47,12 @@
             <artifactId>jcalendar</artifactId>
             <version>1.4</version>
         </dependency>
+        
+        <dependency>
+       <groupId>net.sf.jasperreports</groupId>
+       <artifactId>jasperreports</artifactId>
+       <version>7.0.7</version>
+   </dependency>
 
     </dependencies>
 
@@ -92,3 +98,4 @@
     </build>
 
 </project>
+

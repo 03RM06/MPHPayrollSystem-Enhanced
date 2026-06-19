@@ -15,7 +15,9 @@
                 Permission.VIEW_ALL_EMPLOYEES, Permission.APPROVE_LEAVE,
                 Permission.VIEW_ALL_LEAVE_REQUESTS, Permission.GENERATE_REPORTS,
                 Permission.VIEW_ATTENDANCE_REPORTS, Permission.LOGIN,
-                Permission.VIEW_DASHBOARD, Permission.CREATE_USER)),
+                Permission.VIEW_DASHBOARD, Permission.CREATE_USER,
+                Permission.PROCESS_PAYROLL, Permission.VIEW_ALL_PAYSLIPS,
+                Permission.CREATE_LEAVE_REQUEST, Permission.VIEW_OWN_LEAVE)),
 
         FINANCE("Finance", "Payroll approval and financial reports",
             EnumSet.of(
@@ -25,11 +27,12 @@
                 Permission.LOGIN, Permission.VIEW_DASHBOARD)),
 
         IT("IT Support", "System maintenance and user management",
-            EnumSet.of(
+             EnumSet.of(
                 Permission.EDIT_USER, Permission.VIEW_ALL_USERS,
-                Permission.SYSTEM_MAINTENANCE, Permission.VIEW_SYSTEM_LOGS,
-                Permission.MANAGE_PERMISSIONS, Permission.LOGIN,
-                Permission.VIEW_DASHBOARD)),
+                 Permission.SYSTEM_MAINTENANCE, Permission.VIEW_SYSTEM_LOGS,
+                 Permission.MANAGE_PERMISSIONS, Permission.LOGIN,
+                Permission.VIEW_DASHBOARD, Permission.CREATE_USER,
+               Permission.VIEW_ALL_EMPLOYEES)),
 
         EMPLOYEE("Employee", "Personal info, payslips, and leave requests",
             EnumSet.of(

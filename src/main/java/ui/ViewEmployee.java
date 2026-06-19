@@ -12,6 +12,11 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import javax.swing.JOptionPane;
+import Model.Permission;
+import Services.ReportDataService;
+import Services.ReportService;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ViewEmployee extends javax.swing.JFrame {
 
@@ -76,7 +81,7 @@ public class ViewEmployee extends javax.swing.JFrame {
         jButtonFileLeave.setVisible(role != Role.FINANCE && role != Role.IT);
 
         // Manage Leave — ADMIN and HR only
-        button5.setVisible(role == Role.ADMIN || role == Role.HR);
+        button8.setVisible(role == Role.ADMIN || role == Role.HR);
 
         // Pay Information — visible to ALL roles
         button6.setVisible(true);
@@ -221,9 +226,10 @@ public class ViewEmployee extends javax.swing.JFrame {
         button3 = new java.awt.Button();
         button4 = new java.awt.Button();
         jPanel2 = new javax.swing.JPanel();
-        button5 = new java.awt.Button();
         button6 = new java.awt.Button();
         button7 = new java.awt.Button();
+        button8 = new java.awt.Button();
+        button9Report = new java.awt.Button();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -515,10 +521,6 @@ public class ViewEmployee extends javax.swing.JFrame {
 
         jPanel3.add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 140, 140, -1));
 
-        button5.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        button5.setLabel("Manage Leave");
-        jPanel3.add(button5, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 200, 140, 60));
-
         button6.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         button6.setLabel("Pay Information");
         button6.addActionListener(this::button6ActionPerformed);
@@ -527,6 +529,15 @@ public class ViewEmployee extends javax.swing.JFrame {
         button7.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         button7.setLabel("Pay Information");
         jPanel3.add(button7, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 140, 140, 60));
+
+        button8.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        button8.setLabel("Manage Leave");
+        jPanel3.add(button8, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 200, 140, 60));
+
+        button9Report.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        button9Report.setLabel("Reports");
+        button9Report.addActionListener(this::button9ReportActionPerformed);
+        jPanel3.add(button9Report, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 260, 140, 60));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -706,6 +717,85 @@ public class ViewEmployee extends javax.swing.JFrame {
     new PayslipForm(currentUser, currentEmployee, this).setVisible(true);
     }//GEN-LAST:event_button6ActionPerformed
 
+    private void button9ReportActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_button9ReportActionPerformed
+         if (currentUser == null || !currentUser.getRole().hasPermission(Permission.GENERATE_REPORTS)) {
+        JOptionPane.showMessageDialog(this,
+                "Access Denied.\nYou do not have permission to generate reports.",
+                "Access Restricted", JOptionPane.WARNING_MESSAGE);
+        return;
+    }
+
+    java.util.List<String> options = new java.util.ArrayList<>();
+    if (currentUser.getRole().hasPermission(Permission.VIEW_FINANCIAL_REPORTS)) {
+        options.add("Payroll Summary Report");
+    }
+    if (currentUser.getRole().hasPermission(Permission.VIEW_ATTENDANCE_REPORTS)) {
+        options.add("Employee Timecard");
+    }
+    if (options.isEmpty()) {
+        JOptionPane.showMessageDialog(this, "No reports available for your role.",
+                "No Reports", JOptionPane.INFORMATION_MESSAGE);
+        return;
+    }
+
+    String choice = (String) JOptionPane.showInputDialog(this,
+            "Select a report to generate:", "Generate Reports",
+            JOptionPane.PLAIN_MESSAGE, null, options.toArray(), options.get(0));
+    if (choice == null) return;
+
+     java.time.LocalDate[] range = ui.DateRangeDialog.showDateRangeDialog(this);
+    if (range == null) return;
+    java.time.LocalDate fromDate = range[0];
+    java.time.LocalDate toDate = range[1];
+    String periodLabel = fromDate + " to " + toDate;
+
+    try {
+        ReportService reportService = new ReportService();
+        ReportDataService dataService = new ReportDataService();
+
+        switch (choice) {
+            case "Payroll Summary Report" -> {
+                Map<String, Object> psParams = new HashMap<>();
+                psParams.put("periodLabel", periodLabel);
+                reportService.viewReport("payroll_summary.jrxml", psParams,
+                        dataService.buildPayrollSummary());
+            }
+            case "Employee Timecard" -> {
+                String empId = JOptionPane.showInputDialog(this, "Enter Employee ID:");
+                if (empId == null || empId.isBlank()) return;
+
+                Employee emp = employeeDAO.findById(empId.trim());
+                if (emp == null) {
+                    JOptionPane.showMessageDialog(this,
+                            "No employee found with ID: " + empId,
+                            "Not Found", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+
+                Map<String, Object> params = new HashMap<>();
+                params.put("employeeId", emp.getEmployeeId());
+                params.put("employeeName", emp.getLastName() + ", " + emp.getFirstName());
+                params.put("positionDept", emp.getPosition());
+                params.put("period", periodLabel);
+
+                reportService.viewReport("timecard.jrxml", params,
+                        dataService.buildTimecard(empId.trim(), fromDate, toDate));
+            }
+        }
+    } catch (Exception ex) {
+    logger.log(Level.SEVERE, "Report generation failed", ex);
+    StringBuilder details = new StringBuilder(ex.toString());
+    Throwable cause = ex.getCause();
+    while (cause != null) {
+        details.append("\n\nCaused by:\n").append(cause.toString());
+        cause = cause.getCause();
+    }
+    JOptionPane.showMessageDialog(this,
+            "Error generating report:\n\n" + details,
+            "Report Error", JOptionPane.ERROR_MESSAGE);
+}
+    }//GEN-LAST:event_button9ReportActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -731,9 +821,10 @@ public class ViewEmployee extends javax.swing.JFrame {
     private java.awt.Button button2;
     private java.awt.Button button3;
     private java.awt.Button button4;
-    private java.awt.Button button5;
     private java.awt.Button button6;
     private java.awt.Button button7;
+    private java.awt.Button button8;
+    private java.awt.Button button9Report;
     private javax.swing.JButton jButtonBack1;
     private javax.swing.JButton jButtonCompute1;
     private javax.swing.JButton jButtonFileLeave;
