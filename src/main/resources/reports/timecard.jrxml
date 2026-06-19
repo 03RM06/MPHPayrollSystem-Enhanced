@@ -12,6 +12,9 @@
 	<field name="totalHours" class="java.lang.String"/>
 	<field name="remarks" class="java.lang.String"/>
 	<title height="120">
+		<element kind="image" uuid="9c1d2e3f-0001-0001-0001-000000000001" x="0" y="0" width="60" height="60" onErrorType="Blank">
+			<expression><![CDATA[Thread.currentThread().getContextClassLoader().getResourceAsStream("images/Motorph Logo.png")]]></expression>
+		</element>
 		<element kind="textField" uuid="4023a16e-ebfa-45c8-803c-6010a966f960" x="0" y="0" width="535" height="20" fontSize="16.0" bold="true" hTextAlign="Center">
 			<expression><![CDATA["MotorPH"]]></expression>
 		</element>

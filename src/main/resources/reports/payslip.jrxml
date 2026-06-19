@@ -21,15 +21,21 @@
 	<parameter name="totalDeductions" class="java.math.BigDecimal"/>
 	<parameter name="takeHomePay" class="java.math.BigDecimal"/>
 	<title height="700">
-		<element kind="image" uuid="1a2b3c4d-0001-0001-0001-000000000001" x="0" y="0" width="65" height="65" onErrorType="Blank">
-			<expression><![CDATA[Thread.currentThread().getContextClassLoader().getResourceAsStream("reports/motorph_logo.png")]]></expression>
-		</element>
-		<element kind="textField" uuid="1a2b3c4d-0001-0001-0001-000000000002" x="75" y="2" width="300" height="28" fontSize="22.0" bold="true" italic="true" forecolor="#1F3554">
-			<expression><![CDATA["MotorPH"]]></expression>
-		</element>
-		<element kind="textField" uuid="1a2b3c4d-0001-0001-0001-000000000003" x="75" y="32" width="460" height="13" fontSize="8.0" forecolor="#1F3554">
-			<expression><![CDATA["7 Jupiter Avenue cor. F. Sandoval Jr., Bagong Nayon, Quezon City"]]></expression>
-		</element>
+		<element kind="image" uuid="1a2b3c4d-0001-0001-0001-000000000001" x="0" y="0" width="80" height="80" onErrorType="Blank">
+	<expression><![CDATA[Thread.currentThread().getContextClassLoader().getResourceAsStream("images/Motorph Logo.png")]]></expression>
+</element>
+<element kind="textField" uuid="1a2b3c4d-0001-0001-0001-000000000002" x="90" y="2" width="300" height="28" fontSize="22.0" bold="true" italic="true" forecolor="#1F3554">
+	<expression><![CDATA["MotorPH"]]></expression>
+</element>
+<element kind="textField" uuid="1a2b3c4d-0001-0001-0001-000000000003" x="90" y="32" width="445" height="13" fontSize="8.0" forecolor="#1F3554">
+	<expression><![CDATA["7 Jupiter Avenue cor. F. Sandoval Jr., Bagong Nayon, Quezon City"]]></expression>
+</element>
+<element kind="textField" uuid="1a2b3c4d-0001-0001-0001-000000000004" x="90" y="45" width="445" height="13" fontSize="8.0" forecolor="#1F3554">
+	<expression><![CDATA["Phone: (028) 911-5071 / (028) 911-5072 / (028) 911-5073"]]></expression>
+</element>
+<element kind="textField" uuid="1a2b3c4d-0001-0001-0001-000000000005" x="90" y="58" width="445" height="13" fontSize="8.0" forecolor="#1F3554">
+	<expression><![CDATA["Email: corporate@motorph.com"]]></expression>
+</element>
 		<element kind="textField" uuid="1a2b3c4d-0001-0001-0001-000000000004" x="75" y="45" width="460" height="13" fontSize="8.0" forecolor="#1F3554">
 			<expression><![CDATA["Phone: (028) 911-5071 / (028) 911-5072 / (028) 911-5073"]]></expression>
 		</element>

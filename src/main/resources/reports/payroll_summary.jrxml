@@ -31,6 +31,9 @@
 		<expression><![CDATA[$F{netPay}]]></expression>
 	</variable>
 	<title height="95">
+		<element kind="image" uuid="9c1d2e3f-0002-0002-0002-000000000001" x="0" y="0" width="90" height="90" onErrorType="Blank">
+			<expression><![CDATA[Thread.currentThread().getContextClassLoader().getResourceAsStream("images/Motorph Logo.png")]]></expression>
+		</element>
 		<element kind="textField" uuid="30358105-9180-41f6-9353-19b310affe06" x="0" y="0" width="802" height="25" fontSize="16.0" bold="true" hTextAlign="Center">
 			<expression><![CDATA["MotorPH"]]></expression>
 		</element>
