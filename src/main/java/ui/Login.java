@@ -201,7 +201,7 @@ public class Login extends javax.swing.JFrame {
         * @param user the logged-in user
         */
        private void navigateToRoleBasedPage(UserAccount user) {
-        new ViewEmployee(user).setVisible(true);
+        new MainShell().setVisible(true);
 
     }//GEN-LAST:event_loginButtonActionPerformed
 

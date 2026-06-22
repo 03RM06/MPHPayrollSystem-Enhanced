@@ -82,7 +82,11 @@ public class UserAccountDAO implements DataAccessObject<UserAccount> {
     public UserAccount login(String username, String plainPassword) throws SQLException {
         UserAccount ua = findByUsername(username);
         if (ua == null) return null;
-        return checkPassword(plainPassword, ua.getPassword()) ? ua : null;
+        if (checkPassword(plainPassword, ua.getPassword())) {
+            Services.AuditLogService.log("LOGIN", "user_account", ua.getUsername(), "User logged in");
+            return ua;
+        }
+        return null;
     }
  
     @Override
