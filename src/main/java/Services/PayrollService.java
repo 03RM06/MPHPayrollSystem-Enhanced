@@ -147,6 +147,6 @@ public class PayrollService extends BaseService {
     private boolean isValid(Employee e) {
         return e != null
             && e.getBasicSalary() != null
-            && e.getBasicSalary().compareTo(BigDecimal.ZERO) >= 0;
+            && e.getBasicSalary().compareTo(BigDecimal.ZERO) > 0;
     }
 }
