@@ -139,8 +139,10 @@ public class EmployeeDAO implements DataAccessObject<Employee> {
             upsertAllowance(conn, emp.getEmployeeId(), "Rice Subsidy",       emp.getRiceSubsidy());
             upsertAllowance(conn, emp.getEmployeeId(), "Phone Allowance",    emp.getPhoneAllowance());
             upsertAllowance(conn, emp.getEmployeeId(), "Clothing Allowance", emp.getClothingAllowance());
- 
+
             conn.commit();
+            Services.AuditLogService.log("CREATE_EMPLOYEE", "employee", emp.getEmployeeId(),
+                "Employee created: " + emp.getFirstName() + " " + emp.getLastName());
             return true;
         } catch (SQLException ex) {
             conn.rollback();
@@ -149,7 +151,7 @@ public class EmployeeDAO implements DataAccessObject<Employee> {
             conn.setAutoCommit(true);
         }
     }
- 
+
     @Override
     public boolean update(Employee emp) throws SQLException {
         Connection conn = Database.getInstance().getConnection();
@@ -194,8 +196,9 @@ public class EmployeeDAO implements DataAccessObject<Employee> {
                 ps.setString(5, emp.getEmployeeId());
                 ps.executeUpdate();
             }
- 
+
             conn.commit();
+            Services.AuditLogService.log("UPDATE_EMPLOYEE", "employee", emp.getEmployeeId(), "Employee updated");
             return true;
         } catch (SQLException ex) {
             conn.rollback();
@@ -204,7 +207,7 @@ public class EmployeeDAO implements DataAccessObject<Employee> {
             conn.setAutoCommit(true);
         }
     }
- 
+
     @Override
     public boolean delete(int id) throws SQLException {
         String sql = "DELETE FROM employee WHERE employee_id = ?";

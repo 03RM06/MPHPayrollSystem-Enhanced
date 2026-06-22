@@ -1,11 +1,17 @@
 package Services;
- 
+
+import DAO.EmployeeDAO;
+import DAO.PayrollRecordDAO;
 import Model.Employee;
+import Model.PayrollRecord;
 import Model.TotalPay;
 import java.math.BigDecimal;
- 
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
- * Orchestrates payroll computation for a single employee.
+ * Orchestrates payroll computation for a single employee or an entire period.
  * Uses SalaryDeduction + WithholdingTax (Strategy pattern via DeductionCalculator).
  */
 public class PayrollService extends BaseService {
@@ -68,6 +74,76 @@ public class PayrollService extends BaseService {
         return result;
     }
  
+    /**
+     * Computes payroll for every REGULAR employee and persists each result
+     * as a PayrollRecord for the specified period.
+     *
+     * <p>Employees that have no basic salary or whose salary is zero are
+     * skipped silently.  All other employees whose status is REGULAR are
+     * processed; any employee whose computation fails is logged and skipped
+     * so the rest of the batch still completes.</p>
+     *
+     * @param periodId the ID of an existing payroll_period row
+     * @return list of successfully computed and saved PayrollRecord objects
+     * @throws SQLException if a database error occurs that cannot be recovered
+     */
+    public List<PayrollRecord> processPayrollForPeriod(int periodId) throws SQLException {
+        EmployeeDAO      employeeDAO = new EmployeeDAO();
+        PayrollRecordDAO recordDAO   = new PayrollRecordDAO();
+
+        List<Employee>     allEmployees = employeeDAO.findAll();
+        List<PayrollRecord> results     = new ArrayList<>();
+
+        for (Employee emp : allEmployees) {
+            // Only process REGULAR employees with a positive basic salary
+            if (emp.getStatus() != Employee.EmploymentStatus.REGULAR) continue;
+            if (!isValid(emp)) continue;
+
+            try {
+                // 1. Statutory deductions
+                SalaryDeduction statutory = new SalaryDeduction();
+                statutory.calculate(emp);
+
+                // 2. Withholding tax (on taxable = basic - statutory)
+                WithholdingTax tax = new WithholdingTax();
+                tax.setTotalDeduction(statutory.getAmount());
+                tax.calculate(emp);
+
+                // 3. Gross and net
+                double totalDeductions = statutory.getAmount() + tax.getAmount();
+                TotalPay tp = new TotalPay();
+                tp.calculatePayroll(emp, totalDeductions);
+
+                // 4. Build record
+                PayrollRecord record = new PayrollRecord();
+                record.setPeriodId(periodId);
+                record.setEmployeeId(emp.getEmployeeId());
+                record.setEmployeeName(emp.getLastName() + ", " + emp.getFirstName());
+                record.setBasicSalary(emp.getBasicSalary().doubleValue());
+                record.setGrossPay(tp.getGross());
+                record.setSssDeduction(statutory.getSSS());
+                record.setPhilhealthDeduction(statutory.getPhilDeduct());
+                record.setPagibigDeduction(statutory.getPagibigDeduct());
+                record.setWithholdingTax(tax.getAmount());
+                record.setTotalDeductions(totalDeductions);
+                record.setNetPay(tp.getNet());
+
+                // 5. Persist (INSERT or ON DUPLICATE KEY UPDATE)
+                recordDAO.save(record);
+                results.add(record);
+
+            } catch (SQLException ex) {
+                // Rethrow DB errors so the caller can handle them
+                throw ex;
+            } catch (Exception ex) {
+                // Calculation errors: log and skip this employee
+                System.err.println("[PayrollService] Skipped employee "
+                        + emp.getEmployeeId() + ": " + ex.getMessage());
+            }
+        }
+        return results;
+    }
+
     private boolean isValid(Employee e) {
         return e != null
             && e.getBasicSalary() != null

@@ -113,6 +113,11 @@ public class LeaveDAO {
             if (rows == 0)
                 throw new SQLException("Leave ID " + leaveId + " not found.");
         }
+        if ("Approved".equalsIgnoreCase(newStatus)) {
+            Services.AuditLogService.log("APPROVE_LEAVE", "leave_request", leaveId, "Leave approved");
+        } else if ("Denied".equalsIgnoreCase(newStatus)) {
+            Services.AuditLogService.log("REJECT_LEAVE", "leave_request", leaveId, "Leave rejected");
+        }
     }
 
     public boolean deleteLeaveRequest(String leaveId) throws SQLException {
