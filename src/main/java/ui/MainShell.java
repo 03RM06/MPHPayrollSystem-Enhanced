@@ -89,6 +89,9 @@ public class MainShell extends JFrame {
             case "AUDIT_LOGS":
                 return new AuditLogPanel();
 
+            case "USER_MGMT":
+                return new UserManagementPanel();
+
             case "LEAVE":
                 return buildLeavePanel(user);
 
